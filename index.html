@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>像素坦克战 - 虎式 vs T-34-85</title>
+<style>
+  :root {
+    --accent: #d9b45b;
+  }
+  * {
+    box-sizing: border-box;
+    user-select: none;
+  }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #0c0e10;
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  }
+  #gameCanvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    cursor: none;
+    image-rendering: pixelated;
+  }
+  #crosshair {
+    position: fixed;
+    pointer-events: none;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    text-shadow: 0 0 3px #000, 0 0 6px #000;
+    font-size: 22px;
+    line-height: 1;
+    z-index: 10;
+  }
+  #hud {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000;
+  }
+  .hud-top-left {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    background: rgba(10, 12, 14, 0.55);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    min-width: 180px;
+  }
+  .hud-title {
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .hp-bar-bg {
+    width: 100%;
+    height: 12px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  #hpFill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #e05a4a, #f0a040);
+    transition: width 0.2s;
+  }
+  .hud-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 15px;
+  }
+  #score {
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 20px;
+  }
+  .hud-bottom {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,12,14,0.45);
+    border-radius: 999px;
+    padding: 6px 18px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  #overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.35);
+    z-index: 20;
+  }
+  .panel {
+    background: #171b1e;
+    color: #fff;
+    border: 2px solid rgba(217,180,91,0.7);
+    border-radius: 14px;
+    padding: 28px 36px;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  }
+  .panel h1 {
+    margin: 0 0 6px;
+    color: var(--accent);
+    font-size: 28px;
+    letter-spacing: 3px;
+  }
+  .panel p {
+    color: #b9c2c9;
+    margin: 10px 0;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  .keys {
+    display: inline-block;
+    border: 1px solid #666;
+    border-bottom-width: 3px;
+    border-radius: 5px;
+    padding: 1px 7px;
+    margin: 0 2px;
+    background: #22272b;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  #startBtn {
+    pointer-events: auto;
+    margin-top: 14px;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 26px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #19150c;
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform 0.08s, filter 0.08s;
+  }
+  #startBtn:hover {
+    filter: brightness(1.15);
+    transform: scale(1.04);
+  }
+  #gameOverMsg, #gameWinMsg {
+    display: none;
+    font-weight: 800;
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  #gameOverMsg { color: #f05050; }
+  #gameWinMsg { color: #8ed47a; }
+  #loadError {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #111;
+    color: #f66;
+    z-index: 99;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+    font-size: 18px;
+  }
+  /* 移动端触控 */
+  #touchControls {
+    display: none;
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 30;
+  }
+  #touchControls.active {
+    display: block;
+  }
+  #moveBase {
+    display: none;
+    position: fixed;
+    width: 110px;
+    height: 110px;
+    margin-left: -55px;
+    margin-top: -55px;
+    border: 2px solid rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(0,0,0,0.4);
+  }
+  #moveKnob {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 46px;
+    height: 46px;
+    margin-left: -23px;
+    margin-top: -23px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.75);
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+  #fireBtn {
+    display: none;
+    position: fixed;
+    right: 22px;
+    bottom: 40px;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.75);
+    background: radial-gradient(circle, rgba(255,80,60,0.85), rgba(160,30,20,0.85));
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    text-align: center;
+    line-height: 76px;
+    pointer-events: auto;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+    touch-action: none;
+    user-select: none;
+    z-index: 31;
+  }
+  #mobileHint {
+    display: none;
+    color: #8fd6ff;
+  }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+
+<div id="crosshair">✛</div>
+
+<div id="hud">
+  <div class="hud-top-left">
+    <div class="hud-title">🐯 TIGER I</div>
+    <div class="hp-bar-bg"><div id="hpFill"></div></div>
+    <div class="hud-row"><span>得分</span><span id="score">0</span></div>
+  </div>
+  <div class="hud-bottom">
+    <span class="keys">W</span><span class="keys">A</span><span class="keys">S</span><span class="keys">D</span> 移动 · 鼠标瞄准 · 左键开炮
+  </div>
+</div>
+
+<div id="touchControls">
+  <div id="moveBase"><div id="moveKnob"></div></div>
+  <div id="fireBtn">开火</div>
+</div>
+
+
+<div id="overlay">
+  <div class="panel">
+    <h1>像素坦克战</h1>
+    <p>驾驶 <b style="color:#d9b45b">虎式坦克</b>，迎战至少 3 辆 <b style="color:#6f9c4a">T-34-85</b>。<br/>
+      敌人会巡逻、追击并开火，击毁敌人即可得分。<br/>
+      电脑：<span class="keys">W</span> <span class="keys">A</span> <span class="keys">S</span> <span class="keys">D</span> 移动，鼠标瞄准，左键射击<br/>
+      <span id="mobileHint">手机：左侧拖动摇杆移动，右侧拖动屏幕瞄准，点击“开火”按钮射击</span></p>
+    <div id="gameOverMsg">你的虎式被击毁了</div>
+    <div id="gameWinMsg">🎉 你已肃清所有 T-34-85！</div>
+    <button id="startBtn">开始战斗</button>
+  </div>
+</div>
+
+<div id="loadError">
+  <p>无法初始化 WebGL。请换用支持 WebGL 的现代浏览器打开本页面。</p>
+</div>
+
+<script id="gameScript">
+(function () {
+  'use strict';
+
+  // ============ DOM / Canvas ============
+  const canvas = document.getElementById('gameCanvas');
+  const gl = canvas.getContext('webgl', { antialias: false, alpha: false }) || canvas.getContext('experimental-webgl');
+  if (!gl) {
+    document.getElementById('loadError').style.display = 'flex';
+    return;
+  }
+
+  const crosshairEl = document.getElementById('crosshair');
+  const hpFillEl = document.getElementById('hpFill');
+  const scoreEl = document.getElementById('score');
+  const overlayEl = document.getElementById('overlay');
+  const startBtn = document.getElementById('startBtn');
+  const gameOverMsg = document.getElementById('gameOverMsg');
+  const gameWinMsg = document.getElementById('gameWinMsg');
+  const hudEl = document.getElementById('hud');
+    const touchControlsEl = document.getElementById('touchControls');
+    const moveBaseEl = document.getElementById('moveBase');
+    const moveKnobEl = document.getElementById('moveKnob');
+    const fireBtn = document.getElementById('fireBtn');
+    const mobileHintEl = document.getElementById('mobileHint');
+
+  const PIXEL_W = 960;
+  const PIXEL_H = 540;
+  canvas.width = PIXEL_W;
+  canvas.height = PIXEL_H;
+
+  // ============ Math helpers ============
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function len3(x, y, z) { return Math.sqrt(x*x + y*y + z*z); }
+  function normXZ(x, z) {
+    const l = Math.sqrt(x*x + z*z);
+    return l > 1e-9 ? [x/l, z/l] : [1, 0];
+  }
+  function normalize3(v) {
+    const l = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    if (l > 1e-9) return [v[0]/l, v[1]/l, v[2]/l];
+    return [0, 1, 0];
+  }
+  function cross3(a, b) {
+    return [
+      a[1]*b[2] - a[2]*b[1],
+      a[2]*b[0] - a[0]*b[2],
+      a[0]*b[1] - a[1]*b[0]
+    ];
+  }
+  function dot3(a, b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
+  function angleDiff(a, b) {
+    let d = a - b;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    return d;
+  }
+  function clampAngle(a) {
+    while (a > Math.PI) a -= Math.PI * 2;
+    while (a < -Math.PI) a += Math.PI * 2;
+    return a;
+  }
+
+  // ============ Matrices (column-major, WebGL style) ============
+  function mat4Identity(out) {
+    out[0]=1; out[1]=0; out[2]=0; out[3]=0;
+    out[4]=0; out[5]=1; out[6]=0; out[7]=0;
+    out[8]=0; out[9]=0; out[10]=1; out[11]=0;
+    out[12]=0; out[13]=0; out[14]=0; out[15]=1;
+  }
+  function mat4Create() {
+    const m = new Float32Array(16);
+    mat4Identity(m);
+    return m;
+  }
+  function mat4Multiply(out, a, b) {
+    const a00=a[0], a01=a[1], a02=a[2], a03=a[3];
+    const a10=a[4], a11=a[5], a12=a[6], a13=a[7];
+    const a20=a[8], a21=a[9], a22=a[10], a23=a[11];
+    const a30=a[12], a31=a[13], a32=a[14], a33=a[15];
+    let b0=b[0], b1=b[1], b2=b[2], b3=b[3];
+    out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    b0=b[4]; b1=b[5]; b2=b[6]; b3=b[7];
+    out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    b0=b[8]; b1=b[9]; b2=b[10]; b3=b[11];
+    out[8]  = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[9]  = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    b0=b[12]; b1=b[13]; b2=b[14]; b3=b[15];
+    out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    return out;
+  }
+  function mat4Perspective(out, fovy, aspect, near, far) {
+    const f = 1.0 / Math.tan(fovy / 2);
+    out.fill(0);
+    out[0] = f / aspect;
+    out[5] = f;
+    out[10] = (far + near) / (near - far);
+    out[11] = -1;
+    out[14] = (2 * far * near) / (near - far);
+    return out;
+  }
+  function mat4LookAt(out, eye, center, up) {
+    let f = [center[0]-eye[0], center[1]-eye[1], center[2]-eye[2]];
+    f = normalize3(f);
+    const s = normalize3(cross3(f, up));
+    const u = cross3(s, f);
+    out[0]=s[0]; out[4]=s[1]; out[8]=s[2];  out[12]=-dot3(s, eye);
+    out[1]=u[0]; out[5]=u[1]; out[9]=u[2];  out[13]=-dot3(u, eye);
+    out[2]=-f[0]; out[6]=-f[1]; out[10]=-f[2]; out[14]=dot3(f, eye);
+    out[3]=0; out[7]=0; out[11]=0; out[15]=1;
+    return out;
+  }
+  function mat4Translation(out, x, y, z) {
+    mat4Identity(out);
+    out[12]=x; out[13]=y; out[14]=z;
+    return out;
+  }
+  function mat4Scale(out, x, y, z) {
+    mat4Identity(out);
+    out[0]=x; out[5]=y; out[10]=z;
+    return out;
+  }
+  function mat4RotateY(out, rad) {
+    const c = Math.cos(rad), s = Math.sin(rad);
+    mat4Identity(out);
+    out[0]=c; out[2]=-s;
+    out[8]=s; out[10]=c;
+    return out;
+  }
+  function mat4RotateX(out, rad) {
+    const c = Math.cos(rad), s = Math.sin(rad);
+    mat4Identity(out);
+    out[5]=c; out[6]=s;
+    out[9]=-s; out[10]=c;
+    return out;
+  }
+  function mat4Compose(m, steps) {
+    mat4Identity(m);
+    const tmp = mat4Create();
+    for (const step of steps) {
+      switch (step[0]) {
+        case 'T': mat4Translation(tmp, step[1], step[2], step[3]); break;
+        case 'Y': mat4RotateY(tmp, step[1]); break;
+        case 'X': mat4RotateX(tmp, step[1]); break;
+        case 'S': mat4Scale(tmp, step[1], step[2], step[3]); break;
+        default: continue;
+      }
+      mat4Multiply(m, m, tmp);
+    }
+    return m;
+  }
+  function dirFromYaw(yaw) {
+    // local +Z is forward
+    return [Math.sin(yaw), 0, Math.cos(yaw)];
+  }
+  function rightFromYaw(yaw) {
+    return [Math.cos(yaw), 0, -Math.sin(yaw)];
+  }
+
+  // ============ Shader setup ============
+  const VERT_SRC = [
+    'attribute vec3 aPosition;',
+    'uniform mat4 uMVP;',
+    'void main(){',
+    '  gl_Position = uMVP * vec4(aPosition, 1.0);',
+    '}'
+  ].join('\n');
+
+  const FRAG_SRC = [
+    'precision mediump float;',
+    'uniform vec3 uColor;',
+    'void main(){',
+    '  gl_FragColor = vec4(uColor, 1.0);',
+    '}'
+  ].join('\n');
+
+  function compileShader(type, src) {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(sh));
+    }
+    return sh;
+  }
+
+  const program = gl.createProgram();
+  gl.attachShader(program, compileShader(gl.VERTEX_SHADER, VERT_SRC));
+  gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, FRAG_SRC));
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(program));
+  }
+  gl.useProgram(program);
+
+  const loc = {
+    aPosition: gl.getAttribLocation(program, 'aPosition'),
+    uMVP: gl.getUniformLocation(program, 'uMVP'),
+    uColor: gl.getUniformLocation(program, 'uColor')
+  };
+
+  // Cube mesh (unit cube from -1..1), 6 faces * 2 triangles
+  function makeCube() {
+    const positions = [];
+    const faces = [
+      { pts: [[1,-1,-1],[1,-1,1],[1,1,1],[1,1,-1]] },
+      { pts: [[-1,-1,1],[-1,-1,-1],[-1,1,-1],[-1,1,1]] },
+      { pts: [[-1,1,-1],[1,1,-1],[1,1,1],[-1,1,1]] },
+      { pts: [[-1,-1,1],[1,-1,1],[1,-1,-1],[-1,-1,-1]] },
+      { pts: [[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]] },
+      { pts: [[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,-1]] }
+    ];
+    for (const face of faces) {
+      const p = face.pts;
+      // two triangles: 0-1-2 and 0-2-3
+      positions.push(
+        p[0][0],p[0][1],p[0][2],
+        p[1][0],p[1][1],p[1][2],
+        p[2][0],p[2][1],p[2][2],
+        p[0][0],p[0][1],p[0][2],
+        p[2][0],p[2][1],p[2][2],
+        p[3][0],p[3][1],p[3][2]
+      );
+    }
+    return { verts: new Float32Array(positions), count: positions.length / 3 };
+  }
+
+  function makeGroundPlane() {
+    // A unit XZ plane, y=0
+    return new Float32Array([
+      -0.5, 0, -0.5,
+       0.5, 0, -0.5,
+       0.5, 0,  0.5,
+      -0.5, 0,  0.5
+    ]);
+  }
+
+  function setupBuffer(data) {
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    return buf;
+  }
+
+  const cubeVerts = makeCube();
+  const cubeBuffer = setupBuffer(cubeVerts.verts);
+  const planeVerts = makeGroundPlane();
+  const planeBuffer = setupBuffer(planeVerts);
+
+  function drawMesh(buffer, mode, count, mvp, color) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.enableVertexAttribArray(loc.aPosition);
+    gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
+    gl.uniformMatrix4fv(loc.uMVP, false, mvp);
+    gl.uniform3f(loc.uColor, color[0], color[1], color[2]);
+    gl.drawArrays(mode, 0, count);
+  }
+
+  function drawCube(mvp, color) {
+    drawMesh(cubeBuffer, gl.TRIANGLES, cubeVerts.count, mvp, color);
+  }
+  function drawPlane(mvp, color) {
+    drawMesh(planeBuffer, gl.TRIANGLE_FAN, 4, mvp, color);
+  }
+
+  gl.enable(gl.DEPTH_TEST);
+  gl.depthFunc(gl.LEQUAL);
+  gl.clearColor(0.67, 0.82, 0.94, 1);
+  gl.viewport(0, 0, PIXEL_W, PIXEL_H);
+
+  // ============ Model definitions ============
+  const COLORS = {
+    tigerBody:  [0.35, 0.36, 0.28],
+    tigerDark:  [0.24, 0.25, 0.20],
+    tigerTurret:[0.38, 0.40, 0.30],
+    t34Body:    [0.29, 0.38, 0.20],
+    t34Dark:    [0.20, 0.27, 0.14],
+    t34Turret:  [0.31, 0.42, 0.22],
+    metal:      [0.38, 0.38, 0.37],
+    darkMetal:  [0.18, 0.18, 0.18]
+  };
+
+  // Each part: [localOffsetX, localOffsetY, localOffsetZ, sizeX, sizeY, sizeZ, color, rotX?]
+  function tigerHullParts() {
+    return [
+      // tracks
+      [-1.00, 0.42, 0.0, 0.55, 0.55, 4.6, COLORS.tigerDark],
+      [ 1.00, 0.42, 0.0, 0.55, 0.55, 4.6, COLORS.tigerDark],
+      // lower hull
+      [0, 0.72, 0.0, 2.00, 0.55, 4.30, COLORS.tigerBody],
+      // upper hull
+      [0, 1.16, 0.1, 1.70, 0.42, 4.20, [0.32,0.33,0.25]],
+      // front plate / fenders
+      [0, 0.92, 2.08, 1.95, 0.55, 0.45, [0.34,0.35,0.27]],
+      // rear plate
+      [0, 0.90, -2.15, 1.65, 0.55, 0.35, [0.28,0.29,0.22]],
+      // side skirts (visual)
+      [-1.18, 0.80, 0.0, 0.10, 0.28, 4.20, [0.30,0.31,0.24]],
+      [ 1.18, 0.80, 0.0, 0.10, 0.28, 4.20, [0.30,0.31,0.24]]
+    ];
+  }
+
+  function tigerTurretParts() {
+    return [
+      // turret base / boxy tiger turret
+      [0, 0.22, -0.05, 1.45, 0.52, 1.65, COLORS.tigerTurret],
+      // cupola
+      [0, 0.62, 0.15, 0.45, 0.18, 0.45, COLORS.tigerDark],
+      // gun mantlet
+      [0, 0.24, 0.82, 1.50, 0.55, 0.45, [0.30,0.31,0.28]],
+      // 88mm barrel
+      [0, 0.24, 1.75, 0.13, 0.13, 2.00, COLORS.metal]
+    ];
+  }
+
+  function t34HullParts() {
+    return [
+      // tracks
+      [-0.90, 0.36, 0.0, 0.48, 0.52, 3.90, COLORS.t34Dark],
+      [ 0.90, 0.36, 0.0, 0.48, 0.52, 3.90, COLORS.t34Dark],
+      // hull body (approx sloped look with stacked boxes)
+      [0, 0.68, 0.0, 1.55, 0.58, 3.80, COLORS.t34Body],
+      [0, 0.98, 0.15, 1.45, 0.22, 3.60, [0.25,0.33,0.17]],
+      // front glacis boxes, made from 3 steps for pixel slope
+      [0, 0.70, 1.95, 1.50, 0.38, 0.42, [0.33,0.43,0.24]],
+      [0, 0.95, 1.72, 1.45, 0.30, 0.42, [0.30,0.40,0.21]],
+      [0, 1.15, 1.55, 1.35, 0.24, 0.40, [0.27,0.36,0.18]],
+      // rear
+      [0, 0.82, -1.95, 1.40, 0.50, 0.30, [0.22,0.29,0.15]]
+    ];
+  }
+
+  function t34TurretParts() {
+    return [
+      // T-34 rounded turret approximated with several boxes
+      [0, 0.18, -0.02, 1.25, 0.45, 1.45, COLORS.t34Turret],
+      [0, 0.40, 0.00, 1.05, 0.24, 1.15, [0.28,0.37,0.19]],
+      // cupola
+      [0, 0.55, 0.30, 0.35, 0.12, 0.40, COLORS.t34Dark],
+      // 85mm gun
+      [0, 0.18, 0.80, 0.13, 0.13, 1.70, COLORS.metal]
+    ];
+  }
+
+  function createTank(type, x, z, yaw, team) {
+    const hull = type === 'tiger' ? tigerHullParts() : t34HullParts();
+    const turret = type === 'tiger' ? tigerTurretParts() : t34TurretParts();
+    return {
+      type,
+      team,
+      pos: { x, z },
+      yaw,
+      turretYaw: yaw,
+      hp: 100,
+      maxHp: 100,
+      alive: true,
+      hullParts: hull,
+      turretParts: turret,
+      cooldown: 0,
+      state: 'patrol',
+      patrolTarget: null,
+      patrolWait: 0,
+      aiTimer: 0,
+      hitFlash: 0,
+      muzzle: { lx: 0, ly: 0.24, lz: type === 'tiger' ? 2.8 : 2.0 }
+    };
+  }
+
+  // ============ Game state ============
+  let player, enemies, bullets, particles;
+  let score = 0;
+  let running = false;
+  let lastTime = 0;
+  let mouse = { x: PIXEL_W * 0.5, y: PIXEL_H * 0.42, down: false };
+  let aimWorld = { x: 0, z: 60 };
+    let moveTouchId = null;
+    let aimTouchId = null;
+    let moveTouchStart = { x: 0, y: 0 };
+    let moveTouchCur = { x: 0, y: 0 };
+
+  const MAP_HALF = 38;
+  const FOV = (55 * Math.PI) / 180;
+  const NEAR = 0.1;
+  const FAR = 220;
+  const CAM_DIST = 11;
+  const CAM_HEIGHT = 5.6;
+
+  function resetGame() {
+    resetMoveBase();
+    score = 0;
+    bullets = [];
+    particles = [];
+    player = createTank('tiger', 0, 34, Math.PI, 'player');
+    player.hp = 100;
+    player.turretYaw = Math.PI;
+    enemies = [
+      createTank('t34', -20, -18, 0.2, 'enemy'),
+      createTank('t34', 18, -16, -0.3, 'enemy'),
+      createTank('t34', 2, -6, 0.0, 'enemy'),
+      createTank('t34', -25, 8, 1.2, 'enemy')
+    ];
+    updateHud();
+    overlayEl.style.display = 'none';
+    gameOverMsg.style.display = 'none';
+    gameWinMsg.style.display = 'none';
+  }
+
+  function updateHud() {
+    const pct = player ? Math.max(0, Math.round(player.hp)) : 0;
+    hpFillEl.style.width = pct + '%';
+    scoreEl.textContent = score;
+    if (player && player.hp <= 0) hpFillEl.style.background = '#7a2720';
+    else hpFillEl.style.background = '';
+  }
+
+  // ============ Input ============
+  const keys = {};
+  window.addEventListener('keydown', e => {
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+    keys[e.code] = true;
+  });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+  function updateMouseScreen(clientX, clientY) {
+    const r = canvas.getBoundingClientRect();
+    mouse.x = (clientX - r.left) / r.width * PIXEL_W;
+    mouse.y = (clientY - r.top) / r.height * PIXEL_H;
+    crosshairEl.style.left = clientX + 'px';
+    crosshairEl.style.top = clientY + 'px';
+  }
+  window.addEventListener('mousemove', e => {
+    if (running) updateMouseScreen(e.clientX, e.clientY);
+  });
+  window.addEventListener('mousedown', e => {
+    if (e.button === 0 && running) {
+      mouse.down = true;
+      tryFirePlayer();
+    }
+  });
+  window.addEventListener('mouseup', e => { if (e.button === 0) mouse.down = false; });
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  startBtn.addEventListener('click', () => {
+    resetGame();
+    running = true;
+    showTouchControls();
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+  });
+
+  // ============ 触屏 / 微信手机端 ============
+  function isTouchDevice() {
+    return 'ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+  }
+
+  function showTouchControls() {
+    if (!isTouchDevice()) return;
+    touchControlsEl.classList.add('active');
+    fireBtn.style.display = 'block';
+    mobileHintEl.style.display = 'inline';
+  }
+  if (isTouchDevice()) {
+    mobileHintEl.style.display = 'inline';
+  }
+
+  function clearMoveKeys() {
+    keys['KeyW'] = false;
+    keys['KeyS'] = false;
+    keys['KeyA'] = false;
+    keys['KeyD'] = false;
+  }
+
+  function resetMoveBase() {
+    moveTouchId = null;
+    moveBaseEl.style.display = 'none';
+    moveKnobEl.style.left = '50%';
+    moveKnobEl.style.top = '50%';
+    clearMoveKeys();
+  }
+
+  function updateMoveTouch(touch) {
+    const dxRaw = touch.clientX - moveTouchStart.x;
+    const dyRaw = touch.clientY - moveTouchStart.y;
+    const len = Math.sqrt(dxRaw * dxRaw + dyRaw * dyRaw);
+    const maxR = 42;
+    const scale = len > maxR ? maxR / len : 1;
+    const dx = dxRaw * scale;
+    const dy = dyRaw * scale;
+    moveKnobEl.style.left = 'calc(50% + ' + dx + 'px)';
+    moveKnobEl.style.top = 'calc(50% + ' + dy + 'px)';
+    const dead = 12;
+    keys['KeyW'] = dy < -dead;
+    keys['KeyS'] = dy > dead;
+    keys['KeyA'] = dx < -dead;
+    keys['KeyD'] = dx > dead;
+  }
+
+  function handleTouchStart(e) {
+    if (!running) return;
+    e.preventDefault();
+    const halfX = window.innerWidth * 0.45;
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      if (moveTouchId === null && t.clientX < halfX) {
+        moveTouchId = t.identifier;
+        moveTouchStart.x = t.clientX;
+        moveTouchStart.y = t.clientY;
+        moveBaseEl.style.left = t.clientX + 'px';
+        moveBaseEl.style.top = t.clientY + 'px';
+        moveBaseEl.style.display = 'block';
+        moveKnobEl.style.left = '50%';
+        moveKnobEl.style.top = '50%';
+        updateMoveTouch(t);
+        continue;
+      }
+      if (aimTouchId === null && t.clientX >= halfX) {
+        aimTouchId = t.identifier;
+        updateMouseScreen(t.clientX, t.clientY);
+      }
+    }
+  }
+
+  function handleTouchMove(e) {
+    if (!running) return;
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      if (t.identifier === moveTouchId) {
+        updateMoveTouch(t);
+      } else if (t.identifier === aimTouchId) {
+        updateMouseScreen(t.clientX, t.clientY);
+      }
+    }
+  }
+
+  function handleTouchEnd(e) {
+    if (!running) return;
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      if (t.identifier === moveTouchId) {
+        resetMoveBase();
+      }
+      if (t.identifier === aimTouchId) {
+        aimTouchId = null;
+      }
+    }
+  }
+
+  canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+  canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+  canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+  canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+  fireBtn.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (running) tryFirePlayer();
+  }, { passive: false });
+
+  // ============ Movement helpers ============
+  function fwdVec(tank) { return dirFromYaw(tank.yaw); }
+  function turretFwdVec(tank) { return dirFromYaw(tank.turretYaw); }
+
+  function pivotWorld(tank) {
+    const f = fwdVec(tank);
+    const r = rightFromYaw(tank.yaw);
+    // hull origin at y=0, turret ring local offset
+    const ox = tank.type === 'tiger' ? 0 : 0;
+    const oy = tank.type === 'tiger' ? 1.35 : 1.10;
+    const oz = tank.type === 'tiger' ? 0.15 : 0.1;
+    return {
+      x: tank.pos.x + r[0]*ox + f[0]*oz,
+      y: oy,
+      z: tank.pos.z + r[2]*ox + f[2]*oz
+    };
+  }
+
+  function tankMuzzleWorld(tank) {
+    const p = pivotWorld(tank);
+    const f = turretFwdVec(tank);
+    const lz = tank.muzzle.lz;
+    return {
+      x: p.x + f[0]*lz,
+      y: p.y + tank.muzzle.ly,
+      z: p.z + f[2]*lz
+    };
+  }
+
+  function updateAimFromMouse() {
+    // world camera basis
+    const eye = getCameraEye();
+    const look = getCameraLook();
+    let F = [look[0]-eye[0], look[1]-eye[1], look[2]-eye[2]];
+    F = normalize3(F);
+    const R = normalize3(cross3(F, [0,1,0]));
+    const U = cross3(R, F);
+    const aspect = PIXEL_W / PIXEL_H;
+    const ndcX = (mouse.x / PIXEL_W) * 2 - 1;
+    const ndcY = 1 - (mouse.y / PIXEL_H) * 2;
+    const tanHalf = Math.tan(FOV / 2);
+    let dir = [
+      F[0] + R[0] * ndcX * tanHalf * aspect + U[0] * ndcY * tanHalf,
+      F[1] + R[1] * ndcX * tanHalf * aspect + U[1] * ndcY * tanHalf,
+      F[2] + R[2] * ndcX * tanHalf * aspect + U[2] * ndcY * tanHalf
+    ];
+    dir = normalize3(dir);
+    const planeY = 1.0;
+    if (Math.abs(dir[1]) > 1e-6) {
+      const t = (planeY - eye[1]) / dir[1];
+      if (t > 0) {
+        aimWorld.x = eye[0] + dir[0] * t;
+        aimWorld.z = eye[2] + dir[2] * t;
+      }
+    }
+  }
+
+  function tryFirePlayer() {
+    if (!running || !player || player.hp <= 0) return;
+    if (player.cooldown > 0) return;
+    const muzzle = tankMuzzleWorld(player);
+    const f = turretFwdVec(player);
+    const speed = 52;
+    bullets.push({
+      x: muzzle.x,
+      y: muzzle.y,
+      z: muzzle.z,
+      vx: f[0] * speed,
+      vy: 0,
+      vz: f[2] * speed,
+      owner: 'player',
+      life: 3.0,
+      damage: 42
+    });
+    player.cooldown = 0.9;
+    spawnMuzzleParticles(muzzle);
+    navigator.vibrate && navigator.vibrate(20);
+  }
+
+  function fireEnemy(enemy) {
+    const muzzle = tankMuzzleWorld(enemy);
+    // slight inaccuracy
+    const baseYaw = enemy.turretYaw + (Math.random() - 0.5) * 0.08;
+    const f = dirFromYaw(baseYaw);
+    const speed = 38;
+    bullets.push({
+      x: muzzle.x,
+      y: muzzle.y,
+      z: muzzle.z,
+      vx: f[0] * speed,
+      vy: 0,
+      vz: f[2] * speed,
+      owner: 'enemy',
+      life: 4.0,
+      damage: 13
+    });
+    enemy.cooldown = 2.2 + Math.random() * 1.6;
+    spawnMuzzleParticles(muzzle);
+  }
+
+  function spawnMuzzleParticles(muzzle) {
+    for (let i = 0; i < 8; i++) {
+      particles.push({
+        x: muzzle.x,
+        y: muzzle.y,
+        z: muzzle.z,
+        vx: (Math.random()-0.5)*6,
+        vy: Math.random()*5,
+        vz: (Math.random()-0.5)*6,
+        life: 0.22 + Math.random()*0.15,
+        maxLife: 0.35,
+        size: 0.10 + Math.random()*0.12,
+        color: [1, 0.85, 0.3]
+      });
+    }
+  }
+
+  function explode(x, y, z, big) {
+    const n = big ? 34 : 18;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const spd = 3 + Math.random() * (big ? 10 : 5);
+      particles.push({
+        x: x + (Math.random()-0.5)*0.3,
+        y: y + Math.random()*0.3,
+        z: z + (Math.random()-0.5)*0.3,
+        vx: Math.cos(a) * spd,
+        vy: 2 + Math.random() * (big ? 8 : 4),
+        vz: Math.sin(a) * spd,
+        life: 0.5 + Math.random() * (big ? 0.8 : 0.4),
+        maxLife: 1.4,
+        size: big ? (0.18 + Math.random()*0.35) : (0.12 + Math.random()*0.2),
+        color: Math.random() < 0.5 ? [1, 0.5, 0.15] : [0.9, 0.9, 0.1]
+      });
+    }
+    particles.push({ x:x, y:y, z:z, vx:0, vy:8, vz:0, life:0.7, maxLife:0.7, size:0.7, color:[0.6,0.6,0.55], smoke:true });
+  }
+
+  // ============ Enemy AI ============
+  function randomPatrolTarget() {
+    return {
+      x: (Math.random() - 0.5) * (MAP_HALF * 2 - 12),
+      z: (Math.random() - 0.5) * (MAP_HALF * 2 - 12),
+      wait: 0.5 + Math.random() * 1.5
+    };
+  }
+
+  function updateAI(enemy, dt) {
+    if (!enemy.alive) return;
+    enemy.cooldown = Math.max(0, enemy.cooldown - dt);
+    enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
+    const dx = player.pos.x - enemy.pos.x;
+    const dz = player.pos.z - enemy.pos.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    const detectRange = 38;
+    const fireRange = 34;
+    const preferredRange = 15 + (enemy.id ?? 0) * 2;
+
+    if (dist < detectRange && player.hp > 0) {
+      enemy.state = 'chase';
+    } else if (enemy.state === 'chase' && dist > detectRange + 8) {
+      enemy.state = 'patrol';
+      enemy.patrolTarget = randomPatrolTarget();
+    }
+
+    // Always aim turret at player while alive.
+    const desiredTurret = Math.atan2(dx, dz);
+    const diffTurret = angleDiff(desiredTurret, enemy.turretYaw);
+    enemy.turretYaw += clamp(diffTurret, -3.6 * dt, 3.6 * dt);
+    enemy.turretYaw = clampAngle(enemy.turretYaw);
+
+    if (enemy.state === 'chase' && player.hp > 0) {
+      const desiredYaw = Math.atan2(dx, dz);
+      // keep a preferred distance, but still approach when far
+      if (dist > preferredRange) {
+        const diff = angleDiff(desiredYaw, enemy.yaw);
+        enemy.yaw += clamp(diff, -1.8 * dt, 1.8 * dt);
+        enemy.yaw = clampAngle(enemy.yaw);
+        if (Math.abs(diff) < 0.6) {
+          moveTank(enemy, 4.2 * dt);
+        }
+      } else if (dist < preferredRange * 0.7) {
+        // reverse a bit to keep spacing
+        const diff = angleDiff(desiredYaw, enemy.yaw);
+        enemy.yaw += clamp(diff, -1.5 * dt, 1.5 * dt);
+        enemy.yaw = clampAngle(enemy.yaw);
+        moveTank(enemy, -2.0 * dt);
+      } else {
+        // stop and track
+        const diff = angleDiff(desiredYaw, enemy.yaw);
+        enemy.yaw += clamp(diff, -1.5 * dt, 1.5 * dt);
+        enemy.yaw = clampAngle(enemy.yaw);
+      }
+
+      if (Math.abs(angleDiff(enemy.turretYaw, desiredTurret)) < 0.12 && dist < fireRange && enemy.cooldown <= 0) {
+        fireEnemy(enemy);
+      }
+    } else {
+      // Patrol
+      if (!enemy.patrolTarget) enemy.patrolTarget = randomPatrolTarget();
+      const p = enemy.patrolTarget;
+      const pdx = p.x - enemy.pos.x;
+      const pdz = p.z - enemy.pos.z;
+      const pdist = Math.sqrt(pdx*pdx + pdz*pdz);
+      if (pdist < 1.2) {
+        if (p.wait <= 0) {
+          enemy.patrolTarget = randomPatrolTarget();
+        } else {
+          p.wait -= dt;
+          enemy.turretYaw = enemy.yaw + 0.15 * Math.sin(performance.now() * 0.001);
+        }
+      } else {
+        const desiredYaw = Math.atan2(pdx, pdz);
+        const diff = angleDiff(desiredYaw, enemy.yaw);
+        enemy.yaw += clamp(diff, -1.2 * dt, 1.2 * dt);
+        enemy.yaw = clampAngle(enemy.yaw);
+        if (Math.abs(diff) < 0.5) {
+          moveTank(enemy, 2.6 * dt);
+        }
+        enemy.turretYaw = enemy.yaw;
+      }
+    }
+    clampToMap(enemy);
+  }
+
+  function moveTank(tank, dist) {
+    const f = fwdVec(tank);
+    tank.pos.x += f[0] * dist;
+    tank.pos.z += f[2] * dist;
+  }
+
+  function clampToMap(tank) {
+    tank.pos.x = clamp(tank.pos.x, -MAP_HALF + 2, MAP_HALF - 2);
+    tank.pos.z = clamp(tank.pos.z, -MAP_HALF + 2, MAP_HALF - 2);
+  }
+
+  function updatePlayer(dt) {
+    if (player.hp <= 0) return;
+    player.cooldown = Math.max(0, player.cooldown - dt);
+    const f = fwdVec(player);
+    const s = 7.2;
+    let moved = false;
+    if (keys['KeyW']) { player.pos.x += f[0] * s * dt; player.pos.z += f[2] * s * dt; moved = true; }
+    if (keys['KeyS']) { player.pos.x -= f[0] * s * dt; player.pos.z -= f[2] * s * dt; moved = true; }
+    if (keys['KeyA']) { player.yaw -= 1.7 * dt; moved = true; }
+    if (keys['KeyD']) { player.yaw += 1.7 * dt; moved = true; }
+    player.yaw = clampAngle(player.yaw);
+    clampToMap(player);
+
+    // aim
+    updateAimFromMouse();
+    const pivot = pivotWorld(player);
+    const desiredTurret = Math.atan2(aimWorld.x - pivot.x, aimWorld.z - pivot.z);
+    const diff = angleDiff(desiredTurret, player.turretYaw);
+    player.turretYaw += clamp(diff, -4.0 * dt, 4.0 * dt);
+    player.turretYaw = clampAngle(player.turretYaw);
+  }
+
+  // ============ Bullets ============
+  function hitTestTank(bullet, tank) {
+    if (!tank.alive) return false;
+    const dx = bullet.x - tank.pos.x;
+    const dz = bullet.z - tank.pos.z;
+    const horiz = Math.sqrt(dx*dx + dz*dz);
+    const bodyRadius = tank.type === 'tiger' ? 1.7 : 1.5;
+    if (horiz < bodyRadius + 0.18 && Math.abs(bullet.y - 1.35) < 1.7) {
+      return true;
+    }
+    return false;
+  }
+
+  function updateBullets(dt) {
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const b = bullets[i];
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      b.z += b.vz * dt;
+      b.life -= dt;
+      let dead = b.life <= 0;
+      if (Math.abs(b.x) > MAP_HALF + 5 || Math.abs(b.z) > MAP_HALF + 5 || b.y < 0) {
+        dead = true;
+      }
+      if (!dead) {
+        if (b.owner === 'player') {
+          for (const e of enemies) {
+            if (e.alive && hitTestTank(b, e)) {
+              e.hp -= b.damage;
+              e.hitFlash = 0.2;
+              explode(b.x, b.y, b.z, false);
+              if (e.hp <= 0) {
+                e.alive = false;
+                score += 100;
+                updateHud();
+                explode(e.pos.x, 1.5, e.pos.z, true);
+                if (enemies.every(t => !t.alive)) {
+                  gameWin();
+                }
+              }
+              dead = true;
+              break;
+            }
+          }
+        } else {
+          if (player.alive && player.hp > 0 && hitTestTank(b, player)) {
+            player.hp -= b.damage;
+            player.hitFlash = 0.2;
+            updateHud();
+            explode(b.x, b.y, b.z, false);
+            if (player.hp <= 0) {
+              player.hp = 0;
+              updateHud();
+              gameOver();
+            }
+            dead = true;
+          }
+        }
+      }
+      if (dead) {
+        // remove bullet
+        bullets[i] = bullets[bullets.length - 1];
+        bullets.pop();
+      }
+    }
+  }
+
+  function gameOver() {
+    running = false;
+    gameOverMsg.style.display = 'block';
+    overlayEl.style.display = 'flex';
+    startBtn.textContent = '重新开始';
+    document.getElementById('startBtn').blur();
+    fireBtn.style.display = 'none';
+    touchControlsEl.classList.remove('active');
+  }
+
+  function gameWin() {
+    running = false;
+    gameWinMsg.style.display = 'block';
+    overlayEl.style.display = 'flex';
+    startBtn.textContent = '重新开始';
+    document.getElementById('startBtn').blur();
+    fireBtn.style.display = 'none';
+    touchControlsEl.classList.remove('active');
+  }
+
+  // ============ Particles ============
+  function updateParticles(dt) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.life -= dt;
+      if (p.life <= 0) {
+        particles[i] = particles[particles.length - 1];
+        particles.pop();
+        continue;
+      }
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.z += p.vz * dt;
+      p.vy -= (p.smoke ? 0.2 : 8) * dt;
+      p.vx *= (1 - 0.4 * dt);
+      p.vz *= (1 - 0.4 * dt);
+    }
+  }
+
+  // ============ Camera ============
+  function getCameraEye() {
+    if (!player) return [0, 20, 0];
+    const f = fwdVec(player);
+    return [
+      player.pos.x - f[0] * CAM_DIST,
+      CAM_HEIGHT,
+      player.pos.z - f[2] * CAM_DIST
+    ];
+  }
+  function getCameraLook() {
+    if (!player) return [0, 0, -1];
+    const f = fwdVec(player);
+    return [
+      player.pos.x + f[0] * 2.5,
+      1.2,
+      player.pos.z + f[2] * 2.5
+    ];
+  }
+
+  // ============ Rendering ============
+  const mvp = mat4Create();
+  const viewM = mat4Create();
+  const projM = mat4Create();
+  const modelM = mat4Create();
+  const tmpM = mat4Create();
+  const aspect = PIXEL_W / PIXEL_H;
+
+  function drawTank(tank) {
+    if (!tank.alive) return;
+    const f = fwdVec(tank);
+    const r = rightFromYaw(tank.yaw);
+    const pos = tank.pos;
+
+    // Hull parts
+    for (const part of tank.hullParts) {
+      mat4Compose(modelM, [
+        ['T', pos.x, 0, pos.z],
+        ['Y', tank.yaw],
+        ['T', part[0], part[1], part[2]],
+        part[7] ? ['X', part[7]] : ['X', 0],
+        ['S', part[3], part[4], part[5]]
+      ]);
+      mat4Multiply(mvp, projM, viewM);
+      mat4Multiply(mvp, mvp, modelM);
+      drawCube(mvp, part[6]);
+    }
+
+    // Turret parts
+    const pv = pivotWorld(tank);
+    for (const part of tank.turretParts) {
+      mat4Compose(modelM, [
+        ['T', pv.x, pv.y, pv.z],
+        ['Y', tank.turretYaw],
+        ['T', part[0], part[1], part[2]],
+        part[7] ? ['X', part[7]] : ['X', 0],
+        ['S', part[3], part[4], part[5]]
+      ]);
+      mat4Multiply(mvp, projM, viewM);
+      mat4Multiply(mvp, mvp, modelM);
+      drawCube(mvp, part[6]);
+    }
+  }
+
+  function drawGround() {
+    const cell = 6;
+    // Full map + margin. WebGL clips distant/behind cells automatically.
+    const minX = -MAP_HALF - 15;
+    const maxX = MAP_HALF + 15;
+    const minZ = -MAP_HALF - 15;
+    const maxZ = MAP_HALF + 15;
+
+    for (let gx = minX; gx < maxX; gx += cell) {
+      for (let gz = minZ; gz < maxZ; gz += cell) {
+        const cx = gx + cell * 0.5;
+        const cz = gz + cell * 0.5;
+        const checker = ((Math.round(cx / cell) + Math.round(cz / cell)) & 1) === 0;
+        const color = checker ? [0.42, 0.54, 0.25] : [0.36, 0.48, 0.22];
+        mat4Compose(modelM, [
+          ['T', cx, 0, cz],
+          ['S', cell, 1, cell]
+        ]);
+        mat4Multiply(mvp, projM, viewM);
+        mat4Multiply(mvp, mvp, modelM);
+        drawPlane(mvp, color);
+      }
+    }
+  }
+
+  function drawParticles() {
+    for (const p of particles) {
+      const lifeT = clamp(p.life / p.maxLife, 0, 1);
+      const col = p.smoke
+        ? [0.55 + lifeT * 0.15, 0.55 + lifeT * 0.15, 0.5]
+        : [p.color[0], p.color[1] * (0.5 + lifeT * 0.5), p.color[2]];
+      const sz = p.size * (p.smoke ? (1 + (1 - lifeT) * 3) : (0.5 + lifeT * 0.8));
+      mat4Compose(modelM, [
+        ['T', p.x, p.y, p.z],
+        ['S', sz, sz, sz]
+      ]);
+      mat4Multiply(mvp, projM, viewM);
+      mat4Multiply(mvp, mvp, modelM);
+      drawCube(mvp, col);
+    }
+  }
+
+  function drawBullets() {
+    for (const b of bullets) {
+      mat4Compose(modelM, [
+        ['T', b.x, b.y, b.z],
+        ['S', 0.18, 0.18, 0.45]
+      ]);
+      mat4Multiply(mvp, projM, viewM);
+      mat4Multiply(mvp, mvp, modelM);
+      drawCube(mvp, b.owner === 'player' ? [1, 0.9, 0.2] : [1, 0.35, 0.2]);
+    }
+  }
+
+  function render() {
+    gl.viewport(0, 0, PIXEL_W, PIXEL_H);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    const eye = getCameraEye();
+    const look = getCameraLook();
+    mat4Perspective(projM, FOV, aspect, NEAR, FAR);
+    mat4LookAt(viewM, eye, look, [0, 1, 0]);
+
+    drawGround();
+    for (const e of enemies) drawTank(e);
+    drawTank(player);
+    drawParticles();
+    drawBullets();
+  }
+
+  // ============ Main loop ============
+  function loop(now) {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - lastTime) / 1000 || 0.016);
+    lastTime = now;
+
+    updatePlayer(dt);
+    for (const e of enemies) updateAI(e, dt);
+    updateBullets(dt);
+    updateParticles(dt);
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  // Prevent initial start before user click? It waits start button.
+  updateHud();
+})();
+</script>
+</body>
+</html>
