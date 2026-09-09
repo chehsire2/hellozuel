@@ -29,15 +29,62 @@
   }
   #crosshair {
     position: fixed;
-    pointer-events: none;
-    left: 50%;
-    top: 50%;
+    left: 0;
+    top: 0;
     transform: translate(-50%, -50%);
+    pointer-events: none;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
     color: #fff;
-    text-shadow: 0 0 3px #000, 0 0 6px #000;
-    font-size: 22px;
-    line-height: 1;
+    font-size: 20px;
+    font-weight: 700;
+    text-shadow: 0 0 2px #000, 0 0 5px #000;
     z-index: 10;
+    display: none;
+  }
+  #crosshair.ready {
+    color: #8ee08e;
+    text-shadow: 0 0 7px #3f7;
+  }
+  #crosshair.alert {
+    color: #ffb066;
+    text-shadow: 0 0 7px #f80;
+  }
+  #gunMarker {
+    position: fixed;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    width: 13px;
+    height: 13px;
+    border: 2px solid rgba(255, 110, 90, 0.95);
+    border-radius: 50%;
+    box-shadow: 0 0 3px #000;
+    z-index: 11;
+    display: none;
+  }
+  #gunMarker.merge {
+    display: none !important;
+  }
+  #aimHint {
+    position: fixed;
+    bottom: 84px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    color: #e8eef2;
+    font-size: 12px;
+    line-height: 1;
+    text-shadow: 1px 1px 2px #000;
+    background: rgba(8,10,12,0.5);
+    border-radius: 10px;
+    padding: 4px 12px;
+    white-space: nowrap;
+    z-index: 9;
+    display: none;
   }
   #hud {
     position: fixed;
@@ -64,25 +111,83 @@
     margin-bottom: 6px;
     font-weight: 700;
   }
-  .hp-bar-bg {
-    width: 100%;
+  .module-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 8px;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #d7dee3;
+    min-width: 190px;
+  }
+  .module-panel .mod {
+    white-space: nowrap;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    padding: 2px 5px;
+  }
+  .module-panel b.ok { color: #7ed87e; }
+  .module-panel b.bad { color: #ff6a5e; }
+  #repairBar {
+    display: none;
+    position: relative;
+    margin-top: 6px;
     height: 12px;
-    background: rgba(0,0,0,0.6);
-    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.25);
     border-radius: 6px;
     overflow: hidden;
   }
-  #hpFill {
+  #repairFill {
+    width: 0%;
     height: 100%;
-    width: 100%;
-    background: linear-gradient(90deg, #e05a4a, #f0a040);
-    transition: width 0.2s;
+    background: linear-gradient(90deg, #4aa3e0, #7ed87e);
+    transition: width 0.1s;
+  }
+  #repairBar span {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    line-height: 1;
+    color: #fff;
+    text-shadow: 0 0 3px #000;
   }
   .hud-row {
     display: flex;
     justify-content: space-between;
     margin-top: 8px;
     font-size: 15px;
+  }
+  #battleMessages {
+    position: absolute;
+    top: 96px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 16px;
+    font-weight: 700;
+    text-shadow: 1px 1px 3px #000;
+    z-index: 6;
+    pointer-events: none;
+  }
+  #battleMessages .msg {
+    background: rgba(10,12,14,0.55);
+    border-radius: 6px;
+    padding: 3px 10px;
+    animation: msgIn 0.15s ease-out;
+  }
+  #battleMessages .msg.hit { color: #ffd76a; }
+  #battleMessages .msg.damage { color: #ff6a5e; }
+  #battleMessages .msg.kill { color: #ffd76a; font-size: 18px; }
+  #battleMessages .msg.rich { color: #8ed47a; }
+  @keyframes msgIn {
+    from { transform: translateY(6px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
   #score {
     color: var(--accent);
@@ -241,39 +346,220 @@
     display: none;
     color: #8fd6ff;
   }
+  /* ===== 右上信息 / 最高分 ===== */
+  .hud-top-right {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: rgba(10,12,14,0.55);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    min-width: 136px;
+    text-align: right;
+    line-height: 1.55;
+  }
+  .hud-top-right .row {
+    font-size: 12px;
+    color: #b9c2c9;
+    white-space: nowrap;
+  }
+  .hud-top-right .row b { color: #fff; }
+  .hud-top-right .row.wave { font-size: 13px; }
+  .hud-top-right .row.wave b {
+    color: var(--accent);
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+  #muteBtn {
+    pointer-events: auto;
+    border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 0 7px;
+    margin-left: 6px;
+    font-size: 13px;
+    vertical-align: 1px;
+  }
+  #muteBtn:active { filter: brightness(1.35); }
+  /* ===== 波次横幅 ===== */
+  #waveBanner {
+    position: absolute;
+    top: 34%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    display: none;
+    z-index: 6;
+  }
+  #waveBanner .t {
+    font-size: 46px;
+    font-weight: 900;
+    color: var(--accent);
+    letter-spacing: 5px;
+    text-shadow: 0 0 14px rgba(0,0,0,0.85), 0 2px 5px #000;
+    white-space: nowrap;
+  }
+  #waveBanner .s {
+    font-size: 16px;
+    color: #e8eef2;
+    text-shadow: 0 1px 3px #000;
+    margin-top: 6px;
+  }
+  #waveBanner.pop .t { animation: bannerPop 0.55s ease-out; }
+  @keyframes bannerPop {
+    0%   { transform: scale(2.3); opacity: 0; }
+    60%  { transform: scale(0.92); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  /* ===== 暗角 / 氛围 ===== */
+  #vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(5,7,9,0.6) 100%);
+  }
+  /* ===== 触摸维修按钮 ===== */
+  #repairBtn {
+    display: none;
+    position: fixed;
+    left: 24px;
+    bottom: 132px;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.75);
+    background: radial-gradient(circle, rgba(70,150,220,0.9), rgba(28,72,130,0.9));
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.2;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+    touch-action: none;
+    user-select: none;
+    z-index: 31;
+  }
+  #repairBtn.on {
+    background: radial-gradient(circle, #7ed87e, #2f7d3a);
+    border-color: #bdf5bd;
+  }
+  /* ===== 菜单：难度 / 结算 ===== */
+  #diffRow { margin: 12px 0 4px; }
+  .diff-btn {
+    border: 1px solid #555;
+    background: #22272b;
+    color: #cbd3da;
+    border-radius: 6px;
+    padding: 4px 13px;
+    margin: 0 3px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.1s, color 0.1s;
+  }
+  .diff-btn.active {
+    background: var(--accent);
+    color: #19150c;
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+  #bestLine {
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: #9aa5ad;
+  }
+  #bestLine b { color: var(--accent); }
+  #finalStats { display: none; margin: 6px 0 0; color: #fff; font-size: 14px; line-height: 1.7; }
+  #finalStats b { color: var(--accent); }
+  #newBest { display: none; color: #7ed87e; font-size: 13px; margin-top: 4px; }
+  .msg.score { color: #ffd76a; }
+  /* 窄屏 / 手机端适配 */
+  @media (max-width: 700px) {
+    .hud-top-left { padding: 8px 10px; min-width: 0; }
+    .hud-top-left .hud-title { font-size: 12px; }
+    .module-panel { font-size: 11px; min-width: 0; }
+    .hud-top-right { top: 8px; right: 8px; padding: 6px 9px; min-width: 0; }
+    .hud-top-right .row { font-size: 11px; }
+    #waveBanner .t { font-size: 32px; letter-spacing: 2px; }
+    #battleMessages { top: 88px; font-size: 14px; }
+    .hud-bottom { display: none; }
+    .panel { padding: 20px 22px; max-width: 92vw; }
+    #repairBtn { left: 14px; bottom: 128px; }
+    #fireBtn { right: 14px; bottom: 34px; }
+    #waveBanner .s { font-size: 13px; }
+  }
 </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
 
 <div id="crosshair">✛</div>
+<div id="gunMarker"></div>
+<div id="aimHint"></div>
+
+<div id="vignette"></div>
 
 <div id="hud">
   <div class="hud-top-left">
     <div class="hud-title">🐯 TIGER I</div>
-    <div class="hp-bar-bg"><div id="hpFill"></div></div>
+    <div class="module-panel" id="moduleStatus">
+      <span class="mod">动力 <b class="ok">完好</b></span>
+      <span class="mod">武器 <b class="ok">完好</b></span>
+      <span class="mod">乘员 <b>4</b></span>
+    </div>
+    <div id="repairBar"><div id="repairFill"></div><span>维修中…</span></div>
     <div class="hud-row"><span>得分</span><span id="score">0</span></div>
   </div>
+  <div class="hud-top-right">
+    <div class="row wave">第 <b id="waveCur">0</b> / <b id="waveTotal">6</b> 波</div>
+    <div class="row">剩余 <b id="enemiesLeft">0</b> · <span id="diffLabel">标准</span></div>
+    <div class="row">最高 <b id="bestScore">0</b></div>
+    <div class="row" style="text-align:right"><button id="muteBtn" type="button">🔊</button></div>
+  </div>
+  <div id="battleMessages"></div>
+  <div id="waveBanner"><div class="t" id="waveBannerT">第 1 波</div><div class="s" id="waveBannerS"></div></div>
   <div class="hud-bottom">
-    <span class="keys">W</span><span class="keys">A</span><span class="keys">S</span><span class="keys">D</span> 移动 · 鼠标瞄准 · 左键开炮
+    <span class="keys">W</span> 朝准星行驶 · <span class="keys">S</span> 倒车 · <span class="keys">A</span><span class="keys">D</span> 转向 · 鼠标瞄准（推边平移，右键拖拽环视）· 按住左键开炮（炮口到位自动发射）· <span class="keys">F</span> 维修
   </div>
 </div>
 
 <div id="touchControls">
   <div id="moveBase"><div id="moveKnob"></div></div>
   <div id="fireBtn">开火</div>
+  <div id="repairBtn">按住<br/>维修</div>
 </div>
 
 
 <div id="overlay">
   <div class="panel">
     <h1>像素坦克战</h1>
-    <p>驾驶 <b style="color:#d9b45b">虎式坦克</b>，迎战至少 3 辆 <b style="color:#6f9c4a">T-34-85</b>。<br/>
-      敌人会巡逻、追击并开火，击毁敌人即可得分。<br/>
-      电脑：<span class="keys">W</span> <span class="keys">A</span> <span class="keys">S</span> <span class="keys">D</span> 移动，鼠标瞄准，左键射击<br/>
-      <span id="mobileHint">手机：左侧拖动摇杆移动，右侧拖动屏幕瞄准，点击“开火”按钮射击</span></p>
+    <p>驾驶 <b style="color:#d9b45b">虎式坦克</b>，在村庄迎接一波波苏军车队：<b style="color:#6f9c4a">T-34-85</b>、
+      <b style="color:#7a8a4e">SU-85 坦克歼击车</b> 与 <b style="color:#8a6a44">KV-1 重型坦克</b>。<br/>
+      击毁全部敌人进入下一波；坚持到最后一波即为胜利。<br/>
+      电脑（战争雷霆式操作）：<b>鼠标自由移动</b>控制准星瞄准，把鼠标推向屏幕边缘即可平移视角（<b>按住右键拖动</b>可直接快速环视）；
+      <span class="keys">W</span> 朝准星方向行驶、<span class="keys">S</span> 倒车、
+      <span class="keys">A</span><span class="keys">D</span> 转向；炮塔会以有限转速自动转向准星瞄点，<b>按住左键</b>，炮口对准且装填完成即自动开炮；
+      准星变绿 = 已就位；准星旁的<b>红圈</b>是炮口当前位置，套上准星即可开火。<br/>
+      <span class="keys">F</span> 原地维修5秒 · <span class="keys">M</span> 静音<br/>
+      <span id="mobileHint">手机：左摇杆行驶、右侧拖动屏幕转向/瞄准，按住“开火”，炮塔对准自动射击，“按住维修”修复部件（需停车）</span></p>
+    <div id="diffRow">
+      难度：
+      <button type="button" class="diff-btn" data-diff="easy">休闲</button>
+      <button type="button" class="diff-btn active" data-diff="normal">标准</button>
+      <button type="button" class="diff-btn" data-diff="hard">困难</button>
+    </div>
     <div id="gameOverMsg">你的虎式被击毁了</div>
-    <div id="gameWinMsg">🎉 你已肃清所有 T-34-85！</div>
+    <div id="gameWinMsg">🎉 全波次肃清，任务完成！</div>
+    <div id="finalStats"></div>
+    <div id="newBest">★ 新纪录！</div>
+    <div id="bestLine">历史最高分 <b id="bestScoreLine">0</b></div>
     <button id="startBtn">开始战斗</button>
   </div>
 </div>
@@ -295,18 +581,38 @@
   }
 
   const crosshairEl = document.getElementById('crosshair');
-  const hpFillEl = document.getElementById('hpFill');
+  const gunMarkerEl = document.getElementById('gunMarker');
+  const aimHintEl = document.getElementById('aimHint');
+  const moduleStatusEl = document.getElementById('moduleStatus');
+  const repairBarEl = document.getElementById('repairBar');
+  const repairFillEl = document.getElementById('repairFill');
+  const battleMsgEl = document.getElementById('battleMessages');
   const scoreEl = document.getElementById('score');
   const overlayEl = document.getElementById('overlay');
   const startBtn = document.getElementById('startBtn');
   const gameOverMsg = document.getElementById('gameOverMsg');
   const gameWinMsg = document.getElementById('gameWinMsg');
   const hudEl = document.getElementById('hud');
-    const touchControlsEl = document.getElementById('touchControls');
-    const moveBaseEl = document.getElementById('moveBase');
-    const moveKnobEl = document.getElementById('moveKnob');
-    const fireBtn = document.getElementById('fireBtn');
-    const mobileHintEl = document.getElementById('mobileHint');
+  const touchControlsEl = document.getElementById('touchControls');
+  const moveBaseEl = document.getElementById('moveBase');
+  const moveKnobEl = document.getElementById('moveKnob');
+  const fireBtn = document.getElementById('fireBtn');
+  const mobileHintEl = document.getElementById('mobileHint');
+  // 新增 UI 元素
+  const waveBannerEl = document.getElementById('waveBanner');
+  const waveBannerTEl = document.getElementById('waveBannerT');
+  const waveBannerSEl = document.getElementById('waveBannerS');
+  const waveCurEl = document.getElementById('waveCur');
+  const waveTotalEl = document.getElementById('waveTotal');
+  const enemiesLeftEl = document.getElementById('enemiesLeft');
+  const bestScoreEl = document.getElementById('bestScore');
+  const diffLabelEl = document.getElementById('diffLabel');
+  const muteBtnEl = document.getElementById('muteBtn');
+  const bestScoreLineEl = document.getElementById('bestScoreLine');
+  const finalStatsEl = document.getElementById('finalStats');
+  const newBestEl = document.getElementById('newBest');
+  const repairBtnEl = document.getElementById('repairBtn');
+  const diffBtnEls = Array.prototype.slice.call(document.querySelectorAll('.diff-btn'));
 
   const PIXEL_W = 960;
   const PIXEL_H = 540;
@@ -464,8 +770,9 @@
   const FRAG_SRC = [
     'precision mediump float;',
     'uniform vec3 uColor;',
+    'uniform float uAlpha;',
     'void main(){',
-    '  gl_FragColor = vec4(uColor, 1.0);',
+    '  gl_FragColor = vec4(uColor, uAlpha);',
     '}'
   ].join('\n');
 
@@ -491,10 +798,11 @@
   const loc = {
     aPosition: gl.getAttribLocation(program, 'aPosition'),
     uMVP: gl.getUniformLocation(program, 'uMVP'),
-    uColor: gl.getUniformLocation(program, 'uColor')
+    uColor: gl.getUniformLocation(program, 'uColor'),
+    uAlpha: gl.getUniformLocation(program, 'uAlpha')
   };
 
-  // Cube mesh (unit cube from -1..1), 6 faces * 2 triangles
+  // Cube mesh: unit cube in -0.5..0.5（模型里写的尺寸即“全长”），S 缩放后占满所给尺寸
   function makeCube() {
     const positions = [];
     const faces = [
@@ -507,14 +815,14 @@
     ];
     for (const face of faces) {
       const p = face.pts;
-      // two triangles: 0-1-2 and 0-2-3
+      // two triangles: 0-1-2 and 0-2-3（顶点压到 ±0.5 使“尺寸=边长”）
       positions.push(
-        p[0][0],p[0][1],p[0][2],
-        p[1][0],p[1][1],p[1][2],
-        p[2][0],p[2][1],p[2][2],
-        p[0][0],p[0][1],p[0][2],
-        p[2][0],p[2][1],p[2][2],
-        p[3][0],p[3][1],p[3][2]
+        p[0][0]*0.5,p[0][1]*0.5,p[0][2]*0.5,
+        p[1][0]*0.5,p[1][1]*0.5,p[1][2]*0.5,
+        p[2][0]*0.5,p[2][1]*0.5,p[2][2]*0.5,
+        p[0][0]*0.5,p[0][1]*0.5,p[0][2]*0.5,
+        p[2][0]*0.5,p[2][1]*0.5,p[2][2]*0.5,
+        p[3][0]*0.5,p[3][1]*0.5,p[3][2]*0.5
       );
     }
     return { verts: new Float32Array(positions), count: positions.length / 3 };
@@ -542,20 +850,21 @@
   const planeVerts = makeGroundPlane();
   const planeBuffer = setupBuffer(planeVerts);
 
-  function drawMesh(buffer, mode, count, mvp, color) {
+  function drawMesh(buffer, mode, count, mvp, color, alpha) {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.enableVertexAttribArray(loc.aPosition);
     gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
     gl.uniformMatrix4fv(loc.uMVP, false, mvp);
     gl.uniform3f(loc.uColor, color[0], color[1], color[2]);
+    gl.uniform1f(loc.uAlpha, alpha === undefined ? 1 : alpha);
     gl.drawArrays(mode, 0, count);
   }
 
-  function drawCube(mvp, color) {
-    drawMesh(cubeBuffer, gl.TRIANGLES, cubeVerts.count, mvp, color);
+  function drawCube(mvp, color, alpha) {
+    drawMesh(cubeBuffer, gl.TRIANGLES, cubeVerts.count, mvp, color, alpha);
   }
-  function drawPlane(mvp, color) {
-    drawMesh(planeBuffer, gl.TRIANGLE_FAN, 4, mvp, color);
+  function drawPlane(mvp, color, alpha) {
+    drawMesh(planeBuffer, gl.TRIANGLE_FAN, 4, mvp, color, alpha);
   }
 
   gl.enable(gl.DEPTH_TEST);
@@ -572,82 +881,271 @@
     t34Dark:    [0.20, 0.27, 0.14],
     t34Turret:  [0.31, 0.42, 0.22],
     metal:      [0.38, 0.38, 0.37],
-    darkMetal:  [0.18, 0.18, 0.18]
+    darkMetal:  [0.18, 0.18, 0.18],
+    suBody:     [0.33, 0.41, 0.22],
+    suDark:     [0.22, 0.29, 0.15],
+    suTurret:   [0.36, 0.44, 0.24],
+    kvBody:     [0.44, 0.39, 0.23],
+    kvDark:     [0.30, 0.26, 0.16],
+    kvTurret:   [0.47, 0.41, 0.25]
   };
+
+  // 坦克数据表：几何 / 机动 / 火力 / AI 参数
+  // radius = 中弹判定半径；obs = 行驶/建筑阻挡半径（需 ≥ 车体半长，防车身嵌进墙体）
+  const TANK_DEFS = {
+    tiger: {
+      name: '虎式 I', short: '虎式', crew: 4,
+      radius: 1.7, obs: 2.3, cut: 1.42, pivotOy: 1.35, pivotOz: 0.15,
+      reward: 0
+    },
+    t34: {
+      name: 'T-34-85', short: 'T-34', crew: 3,
+      radius: 1.5, obs: 1.9, cut: 1.32, pivotOy: 1.10, pivotOz: 0.10,
+      speed: 3.8, turn: 1.7, turretTurn: 3.2,
+      fireCd: [2.2, 3.6], fireRange: 32, prefRange: 14, detect: 36,
+      reward: 100, penPower: 0.9, aimErr: 0.03, turret: true
+    },
+    su85: {
+      name: 'SU-85', short: 'SU-85', crew: 3,
+      radius: 1.45, obs: 1.85, cut: 1.40, pivotOy: 1.15, pivotOz: 0.30,
+      speed: 4.7, turn: 1.9, turretTurn: 0,
+      fireCd: [2.8, 4.4], fireRange: 36, prefRange: 24, detect: 42,
+      reward: 150, penPower: 1.25, aimErr: 0.05, turret: false
+    },
+    kv1: {
+      name: 'KV-1', short: 'KV-1', crew: 5,
+      radius: 1.85, obs: 2.35, cut: 1.50, pivotOy: 1.38, pivotOz: 0.20,
+      speed: 2.6, turn: 1.0, turretTurn: 1.8,
+      fireCd: [2.6, 4.0], fireRange: 30, prefRange: 10, detect: 34,
+      reward: 250, penPower: 1.1, aimErr: 0.02, turret: true
+    }
+  };
+
 
   // Each part: [localOffsetX, localOffsetY, localOffsetZ, sizeX, sizeY, sizeZ, color, rotX?]
   function tigerHullParts() {
     return [
-      // tracks
-      [-1.00, 0.42, 0.0, 0.55, 0.55, 4.6, COLORS.tigerDark],
-      [ 1.00, 0.42, 0.0, 0.55, 0.55, 4.6, COLORS.tigerDark],
-      // lower hull
-      [0, 0.72, 0.0, 2.00, 0.55, 4.30, COLORS.tigerBody],
-      // upper hull
-      [0, 1.16, 0.1, 1.70, 0.42, 4.20, [0.32,0.33,0.25]],
-      // front plate / fenders
-      [0, 0.92, 2.08, 1.95, 0.55, 0.45, [0.34,0.35,0.27]],
-      // rear plate
-      [0, 0.90, -2.15, 1.65, 0.55, 0.35, [0.28,0.29,0.22]],
-      // side skirts (visual)
-      [-1.18, 0.80, 0.0, 0.10, 0.28, 4.20, [0.30,0.31,0.24]],
-      [ 1.18, 0.80, 0.0, 0.10, 0.28, 4.20, [0.30,0.31,0.24]]
+      // 负重轮/履带下方
+      [-1.02, 0.42, 0.0, 0.55, 0.65, 4.85, COLORS.tigerDark],
+      [ 1.02, 0.42, 0.0, 0.55, 0.65, 4.85, COLORS.tigerDark],
+      // 履带上缘
+      [-1.08, 0.82, 0.0, 0.42, 0.12, 4.6, [0.18,0.18,0.16]],
+      [ 1.08, 0.82, 0.0, 0.42, 0.12, 4.6, [0.18,0.18,0.16]],
+      // 车体下部
+      [0, 0.78, 0.0, 2.10, 0.62, 4.65, COLORS.tigerBody],
+      // 车体上部/战斗室
+      [0, 1.20, 0.1, 1.85, 0.45, 4.55, [0.33,0.34,0.26]],
+      // 首上装甲（虎式较垂直宽大）
+      [0, 0.95, 2.32, 1.90, 0.75, 0.35, [0.38,0.40,0.30]],
+      // 首下
+      [0, 0.55, 2.12, 1.95, 0.45, 0.30, [0.30,0.31,0.24]],
+      // 发动机舱后甲板
+      [0, 1.42, -0.75, 1.55, 0.22, 2.00, [0.30,0.31,0.24]],
+      // 尾部排气管
+      [-0.65, 1.00, -2.28, 0.20, 0.45, 0.20, COLORS.darkMetal],
+      [ 0.65, 1.00, -2.28, 0.20, 0.45, 0.20, COLORS.darkMetal],
+      // 侧裙板
+      [-1.24, 0.92, 0.0, 0.08, 0.28, 4.30, [0.30,0.31,0.24]],
+      [ 1.24, 0.92, 0.0, 0.08, 0.28, 4.30, [0.30,0.31,0.24]],
+      // 前挡泥板
+      [-1.15, 0.82, 2.05, 0.42, 0.08, 0.65, [0.28,0.28,0.22]],
+      [ 1.15, 0.82, 2.05, 0.42, 0.08, 0.65, [0.28,0.28,0.22]]
     ];
   }
 
   function tigerTurretParts() {
     return [
-      // turret base / boxy tiger turret
-      [0, 0.22, -0.05, 1.45, 0.52, 1.65, COLORS.tigerTurret],
-      // cupola
-      [0, 0.62, 0.15, 0.45, 0.18, 0.45, COLORS.tigerDark],
-      // gun mantlet
-      [0, 0.24, 0.82, 1.50, 0.55, 0.45, [0.30,0.31,0.28]],
-      // 88mm barrel
-      [0, 0.24, 1.75, 0.13, 0.13, 2.00, COLORS.metal]
+      // 虎式方形炮塔主体
+      [0, 0.22, -0.05, 1.55, 0.58, 1.80, COLORS.tigerTurret],
+      // 炮塔后置储物箱（让虎式炮塔更有辨识度）
+      [0, 0.20, -0.95, 1.30, 0.45, 0.40, [0.32,0.33,0.25]],
+      // 炮塔顶部
+      [0, 0.58, 0.0, 1.45, 0.14, 1.65, [0.33,0.34,0.26]],
+      // 车长指挥塔
+      [0.38, 0.78, 0.22, 0.42, 0.16, 0.42, COLORS.tigerDark],
+      // 装填手舱盖
+      [-0.42, 0.75, 0.35, 0.38, 0.12, 0.38, COLORS.tigerDark],
+      // 宽大炮盾
+      [0, 0.24, 0.92, 1.55, 0.62, 0.50, [0.32,0.32,0.30]],
+      // 88mm 长身管
+      [0, 0.24, 1.95, 0.14, 0.14, 2.10, COLORS.metal],
+      // 炮口制退器
+      [0, 0.24, 3.08, 0.18, 0.18, 0.25, COLORS.darkMetal]
     ];
   }
 
   function t34HullParts() {
     return [
-      // tracks
-      [-0.90, 0.36, 0.0, 0.48, 0.52, 3.90, COLORS.t34Dark],
-      [ 0.90, 0.36, 0.0, 0.48, 0.52, 3.90, COLORS.t34Dark],
-      // hull body (approx sloped look with stacked boxes)
-      [0, 0.68, 0.0, 1.55, 0.58, 3.80, COLORS.t34Body],
-      [0, 0.98, 0.15, 1.45, 0.22, 3.60, [0.25,0.33,0.17]],
-      // front glacis boxes, made from 3 steps for pixel slope
-      [0, 0.70, 1.95, 1.50, 0.38, 0.42, [0.33,0.43,0.24]],
-      [0, 0.95, 1.72, 1.45, 0.30, 0.42, [0.30,0.40,0.21]],
-      [0, 1.15, 1.55, 1.35, 0.24, 0.40, [0.27,0.36,0.18]],
-      // rear
-      [0, 0.82, -1.95, 1.40, 0.50, 0.30, [0.22,0.29,0.15]]
+      // 履带/行走部分
+      [-0.95, 0.34, 0.0, 0.50, 0.52, 4.10, COLORS.t34Dark],
+      [ 0.95, 0.34, 0.0, 0.50, 0.52, 4.10, COLORS.t34Dark],
+      // 克里斯蒂大直径负重轮（用方块点缀）
+      [-0.95, 0.36, 1.2, 0.52, 0.50, 0.30, [0.14,0.17,0.11]],
+      [ 0.95, 0.36, 1.2, 0.52, 0.50, 0.30, [0.14,0.17,0.11]],
+      [-0.95, 0.36, 0.4, 0.52, 0.50, 0.30, [0.14,0.17,0.11]],
+      [ 0.95, 0.36, 0.4, 0.52, 0.50, 0.30, [0.14,0.17,0.11]],
+      [-0.95, 0.36, -0.4, 0.52, 0.50, 0.30, [0.14,0.17,0.11]],
+      [ 0.95, 0.36, -0.4, 0.52, 0.50, 0.30, [0.14,0.17,0.11]],
+      [-0.95, 0.36, -1.2, 0.52, 0.50, 0.30, [0.14,0.17,0.11]],
+      [ 0.95, 0.36, -1.2, 0.52, 0.50, 0.30, [0.14,0.17,0.11]],
+      // 车体主体
+      [0, 0.72, 0.0, 1.65, 0.55, 4.00, COLORS.t34Body],
+      // 车体上缘
+      [0, 1.02, 0.15, 1.50, 0.22, 3.75, [0.25,0.33,0.17]],
+      // 首上大倾角：阶梯式模拟
+      [0, 0.72, 2.12, 1.58, 0.32, 0.35, [0.36,0.46,0.26]],
+      [0, 0.95, 1.90, 1.50, 0.30, 0.35, [0.33,0.43,0.24]],
+      [0, 1.16, 1.72, 1.40, 0.28, 0.36, [0.29,0.38,0.20]],
+      [0, 1.34, 1.55, 1.30, 0.22, 0.40, [0.26,0.34,0.18]],
+      // 首下
+      [0, 0.48, 2.00, 1.55, 0.30, 0.30, [0.28,0.36,0.19]],
+      // 尾部发动机舱
+      [0, 0.95, -2.10, 1.45, 0.55, 0.30, [0.22,0.29,0.15]],
+      [0, 1.30, -2.10, 1.30, 0.28, 0.35, [0.25,0.32,0.17]]
     ];
   }
 
   function t34TurretParts() {
     return [
-      // T-34 rounded turret approximated with several boxes
-      [0, 0.18, -0.02, 1.25, 0.45, 1.45, COLORS.t34Turret],
-      [0, 0.40, 0.00, 1.05, 0.24, 1.15, [0.28,0.37,0.19]],
-      // cupola
-      [0, 0.55, 0.30, 0.35, 0.12, 0.40, COLORS.t34Dark],
-      // 85mm gun
-      [0, 0.18, 0.80, 0.13, 0.13, 1.70, COLORS.metal]
+      // T-34-85 低矮铸造炮塔（下宽上收）
+      [0, 0.18, 0.0, 1.30, 0.42, 1.50, COLORS.t34Turret],
+      [0, 0.40, 0.05, 1.10, 0.30, 1.25, [0.32,0.43,0.23]],
+      [0, 0.60, 0.12, 0.90, 0.20, 1.00, [0.29,0.39,0.20]],
+      // 炮塔尾舱
+      [0, 0.28, -0.85, 0.90, 0.40, 0.35, [0.24,0.33,0.17]],
+      // 车长舱盖
+      [0, 0.75, 0.30, 0.38, 0.12, 0.40, COLORS.t34Dark],
+      // 85mm 炮盾
+      [0, 0.18, 0.78, 1.20, 0.40, 0.35, [0.35,0.42,0.26]],
+      // 85mm 长身管
+      [0, 0.18, 1.55, 0.13, 0.13, 1.80, COLORS.metal],
+      // 炮口制退器
+      [0, 0.18, 2.55, 0.18, 0.18, 0.30, COLORS.darkMetal]
+    ];
+  }
+
+  function su85HullParts() {
+    return [
+      // 履带 / 行走部分
+      [-0.92, 0.30, 0.0, 0.46, 0.52, 4.10, COLORS.suDark],
+      [ 0.92, 0.30, 0.0, 0.46, 0.52, 4.10, COLORS.suDark],
+      // 负重轮点缀
+      [-0.92, 0.32, 1.2, 0.48, 0.46, 0.26, [0.16,0.20,0.12]],
+      [ 0.92, 0.32, 1.2, 0.48, 0.46, 0.26, [0.16,0.20,0.12]],
+      [-0.92, 0.32, 0.4, 0.48, 0.46, 0.26, [0.16,0.20,0.12]],
+      [ 0.92, 0.32, 0.4, 0.48, 0.46, 0.26, [0.16,0.20,0.12]],
+      [-0.92, 0.32, -0.4, 0.48, 0.46, 0.26, [0.16,0.20,0.12]],
+      [ 0.92, 0.32, -0.4, 0.48, 0.46, 0.26, [0.16,0.20,0.12]],
+      [-0.92, 0.32, -1.2, 0.48, 0.46, 0.26, [0.16,0.20,0.12]],
+      [ 0.92, 0.32, -1.2, 0.48, 0.46, 0.26, [0.16,0.20,0.12]],
+      // 车体主体（低矮）
+      [0, 0.62, 0.0, 1.66, 0.52, 4.05, COLORS.suBody],
+      // 车体上缘 / 后甲板
+      [0, 0.92, -0.7, 1.45, 0.18, 2.7, [0.26,0.33,0.17]],
+      [0, 0.95, -2.05, 1.40, 0.24, 0.45, COLORS.suDark],
+      // 首上大倾角阶梯（无炮塔歼击车，正面投影小）
+      [0, 0.62, 2.10, 1.60, 0.32, 0.36, [0.30,0.38,0.20]],
+      [0, 0.84, 1.94, 1.50, 0.28, 0.36, [0.27,0.35,0.18]],
+      [0, 1.02, 1.76, 1.38, 0.24, 0.36, [0.24,0.31,0.16]],
+      [0, 1.18, 1.55, 1.25, 0.22, 0.42, [0.21,0.28,0.14]],
+      // 首下
+      [0, 0.42, 2.00, 1.55, 0.28, 0.30, [0.26,0.33,0.17]],
+      // 前挡泥板
+      [-1.05, 0.62, 2.10, 0.4, 0.06, 0.6, [0.2,0.26,0.13]],
+      [ 1.05, 0.62, 2.10, 0.4, 0.06, 0.6, [0.2,0.26,0.13]]
+    ];
+  }
+
+  // SU-85 无炮塔：这部分是“战斗室 + 主炮”，随车体一同旋转
+  function su85TurretParts() {
+    return [
+      // 前部战斗室（低矮方盒，正面为厚实倾斜装甲）
+      [0, 0.02, 0.30, 1.50, 0.55, 1.70, COLORS.suTurret],
+      [0, 0.45, 0.10, 1.24, 0.50, 1.30, [0.38,0.46,0.25]],
+      [0, 0.75, 0.35, 0.95, 0.42, 0.85, COLORS.suDark],
+      // 前上装甲板
+      [0, 0.25, 1.42, 1.52, 0.78, 0.30, [0.30,0.38,0.20]],
+      // 车长舱盖
+      [-0.32, 0.90, 0.35, 0.42, 0.12, 0.42, COLORS.suDark],
+      // 85mm 主炮（位置较高，从战斗室伸向前方）
+      [0, 0.30, 2.30, 0.14, 0.14, 2.20, COLORS.metal],
+      // 炮口制退器
+      [0, 0.30, 3.56, 0.20, 0.20, 0.26, COLORS.darkMetal]
+    ];
+  }
+
+  function kv1HullParts() {
+    return [
+      // 宽履带
+      [-1.10, 0.38, 0.0, 0.58, 0.66, 4.60, COLORS.kvDark],
+      [ 1.10, 0.38, 0.0, 0.58, 0.66, 4.60, COLORS.kvDark],
+      // 负重轮（KV 数量多、排列密）
+      [-1.10, 0.42, 1.5, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      [ 1.10, 0.42, 1.5, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      [-1.10, 0.42, 0.9, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      [ 1.10, 0.42, 0.9, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      [-1.10, 0.42, 0.3, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      [ 1.10, 0.42, 0.3, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      [-1.10, 0.42, -0.3, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      [ 1.10, 0.42, -0.3, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      [-1.10, 0.42, -0.9, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      [ 1.10, 0.42, -0.9, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      [-1.10, 0.42, -1.5, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      [ 1.10, 0.42, -1.5, 0.6, 0.5, 0.24, [0.22,0.20,0.12]],
+      // 车体主体（宽大厚实）
+      [0, 0.84, 0.0, 2.15, 0.68, 4.55, COLORS.kvBody],
+      // 车体上缘
+      [0, 1.26, 0.05, 1.95, 0.40, 4.35, [0.40,0.35,0.20]],
+      // 首上装甲阶梯
+      [0, 0.95, 2.30, 1.95, 0.50, 0.42, [0.50,0.44,0.26]],
+      [0, 1.30, 2.08, 1.85, 0.40, 0.40, [0.45,0.40,0.23]],
+      // 首下
+      [0, 0.55, 2.18, 1.95, 0.35, 0.32, [0.36,0.32,0.18]],
+      // 发动机舱后甲板
+      [0, 1.35, -1.15, 1.55, 0.22, 2.00, [0.36,0.32,0.19]],
+      // 尾部排气管
+      [-0.75, 1.15, -2.30, 0.22, 0.45, 0.20, COLORS.darkMetal],
+      [ 0.75, 1.15, -2.30, 0.22, 0.45, 0.20, COLORS.darkMetal],
+      // 侧裙板
+      [-1.26, 0.98, 0.0, 0.08, 0.26, 4.30, [0.34,0.30,0.18]],
+      [ 1.26, 0.98, 0.0, 0.08, 0.26, 4.30, [0.34,0.30,0.18]]
+    ];
+  }
+
+  function kv1TurretParts() {
+    return [
+      // KV-1 大型箱形炮塔（下宽上略收）
+      [0, 0.05, 0.0, 2.00, 0.80, 2.00, COLORS.kvTurret],
+      [0, 0.55, -0.05, 1.75, 0.50, 1.75, COLORS.kvDark],
+      // 炮塔顶部
+      [0, 0.90, 0.0, 1.62, 0.14, 1.60, [0.42,0.37,0.22]],
+      // 车长指挥塔
+      [0.38, 1.08, 0.30, 0.45, 0.20, 0.45, COLORS.kvDark],
+      // 装填手舱盖
+      [-0.42, 1.00, 0.35, 0.40, 0.14, 0.40, COLORS.kvDark],
+      // 炮盾
+      [0, 0.15, 1.05, 2.00, 0.85, 0.60, [0.48,0.43,0.26]],
+      // 76mm 主炮
+      [0, 0.15, 2.05, 0.17, 0.17, 1.90, COLORS.metal],
+      // 炮口制退器
+      [0, 0.15, 3.05, 0.22, 0.22, 0.28, COLORS.darkMetal]
     ];
   }
 
   function createTank(type, x, z, yaw, team) {
-    const hull = type === 'tiger' ? tigerHullParts() : t34HullParts();
-    const turret = type === 'tiger' ? tigerTurretParts() : t34TurretParts();
+    const def = TANK_DEFS[type] || TANK_DEFS.t34;
+    let hull, turret;
+    if (type === 'tiger') { hull = tigerHullParts(); turret = tigerTurretParts(); }
+    else if (type === 'su85') { hull = su85HullParts(); turret = su85TurretParts(); }
+    else if (type === 'kv1') { hull = kv1HullParts(); turret = kv1TurretParts(); }
+    else { hull = t34HullParts(); turret = t34TurretParts(); }
     return {
       type,
       team,
+      def,
       pos: { x, z },
       yaw,
       turretYaw: yaw,
-      hp: 100,
-      maxHp: 100,
       alive: true,
       hullParts: hull,
       turretParts: turret,
@@ -656,56 +1154,422 @@
       patrolTarget: null,
       patrolWait: 0,
       aiTimer: 0,
+      stuckTimer: 0,
       hitFlash: 0,
-      muzzle: { lx: 0, ly: 0.24, lz: type === 'tiger' ? 2.8 : 2.0 }
+      muzzle: {
+        lx: 0,
+        ly: type === 'tiger' ? 0.24 : (type === 't34' ? 0.18 : (type === 'su85' ? 0.30 : 0.20)),
+        lz: type === 'tiger' ? 3.0 : (type === 't34' ? 2.6 : (type === 'su85' ? 3.0 : 2.4))
+      },
+      modules: {
+        engine: 1,
+        trackL: 1,
+        trackR: 1,
+        turret: 1,
+        gun: 1,
+        crew: def.crew
+      },
+      destroyedBy: '',
+      repair: 0
     };
   }
 
+  // ============ 小村落建筑 ============
+  function createVillage() {
+    // 在整个地图上按网格均匀铺开，建筑间距约 20，中间自然形成道路
+    // 战火后的村庄：墙体烧黑、屋顶更黑，作为战场上显眼且坚实的掩体
+    const wall1 = [0.20, 0.17, 0.14];   // 焦黑
+    const wall2 = [0.15, 0.14, 0.13];   // 炭黑
+    const wall3 = [0.26, 0.20, 0.15];   // 焦褐
+    const roof1 = [0.07, 0.07, 0.08];
+    const roof2 = [0.05, 0.05, 0.06];
+    const roof3 = [0.09, 0.08, 0.07];
+    const walls = [wall1, wall2, wall3];
+    const roofs = [roof1, roof2, roof3];
+    const coords = [-40, -20, 0, 20, 40];
+    const result = [];
+    let n = 0;
+    for (const cx of coords) {
+      for (const cz of coords) {
+        // 中心留出小村庄广场，避免出生/巡逻点被建筑堵死
+        if (cx === 0 && cz === 0) continue;
+        const palette = walls[n % walls.length];
+        const paletteRoof = roofs[n % roofs.length];
+        const sx = 4.5 + (n % 3) * 0.8;
+        const sz = 4.5 + ((n + 1) % 3) * 0.8;
+        result.push({
+          x: cx,
+          z: cz,
+          sx,
+          sz,
+          h: 2.4 + (n % 2) * 0.35,
+          wall: palette,
+          roof: paletteRoof
+        });
+        n++;
+      }
+    }
+    return result;
+  }
+
+  const buildings = createVillage();
+
+  function circleHitsBuilding(x, z, radius) {
+    for (const b of buildings) {
+      const hw = b.sx / 2 + radius;
+      const hd = b.sz / 2 + radius;
+      if (Math.abs(x - b.x) < hw && Math.abs(z - b.z) < hd) return true;
+    }
+    return false;
+  }
+
+  function pointHitsBuilding(x, z, radius) {
+    return circleHitsBuilding(x, z, radius || 0);
+  }
+
+  function allTanks() {
+    const arr = enemies ? enemies.slice() : [];
+    if (player && player.alive) arr.push(player);
+    return arr;
+  }
+
+  function tankRadius(t) {
+    return (t.def && t.def.obs) ? t.def.obs : ((t.def && t.def.radius) || 1.5);
+  }
+
+  function circleHitsTank(x, z, self, radius) {
+    for (const t of allTanks()) {
+      if (t === self || !t.alive) continue;
+      const rr = radius + tankRadius(t);
+      const dx = x - t.pos.x;
+      const dz = z - t.pos.z;
+      if (dx * dx + dz * dz < rr * rr) return true;
+    }
+    return false;
+  }
+
+  function buildingBulletBlocked(x0, z0, x1, z1) {
+    // quick segment vs AABB test for shell passing through buildings
+    for (const b of buildings) {
+      const minX = b.x - b.sx / 2, maxX = b.x + b.sx / 2;
+      const minZ = b.z - b.sz / 2, maxZ = b.z + b.sz / 2;
+      let tmin = 0, tmax = 1;
+      const dx = x1 - x0, dz = z1 - z0;
+      if (Math.abs(dx) < 1e-9) {
+        if (x0 < minX || x0 > maxX) continue;
+      } else {
+        let t1 = (minX - x0) / dx;
+        let t2 = (maxX - x0) / dx;
+        if (t1 > t2) { const tmp = t1; t1 = t2; t2 = tmp; }
+        tmin = Math.max(tmin, t1);
+        tmax = Math.min(tmax, t2);
+        if (tmin > tmax) continue;
+      }
+      if (Math.abs(dz) < 1e-9) {
+        if (z0 < minZ || z0 > maxZ) continue;
+      } else {
+        let t1 = (minZ - z0) / dz;
+        let t2 = (maxZ - z0) / dz;
+        if (t1 > t2) { const tmp = t1; t1 = t2; t2 = tmp; }
+        tmin = Math.max(tmin, t1);
+        tmax = Math.min(tmax, t2);
+        if (tmin > tmax) continue;
+      }
+      if (tmin < 1 && tmax > 0) return b;
+    }
+    return null;
+  }
+
+  function losBlocked(x0, z0, x1, z1) {
+    return buildingBulletBlocked(x0, z0, x1, z1) !== null;
+  }
+
+  function randomPlayerSpawn() {
+    const angles = [
+      0, Math.PI / 3, Math.PI * 2 / 3, Math.PI,
+      Math.PI * 4 / 3, Math.PI * 5 / 3
+    ];
+    let spawn;
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const a = angles[Math.floor(Math.random() * angles.length)] + (Math.random() - 0.5) * 0.5;
+      const dist = 36 + Math.random() * 12;
+      const x = clamp(Math.cos(a) * dist, -MAP_HALF + 5, MAP_HALF - 5);
+      const z = clamp(Math.sin(a) * dist, -MAP_HALF + 5, MAP_HALF - 5);
+      if (!circleHitsBuilding(x, z, 1.6)) {
+        spawn = { x, z, yaw: Math.atan2(-x, -z) };
+        break;
+      }
+    }
+    if (!spawn) spawn = { x: 0, z: 30, yaw: Math.PI };
+    return spawn;
+  }
+
+  function randomPatrolPointNearVillage() {
+    // 村庄道路附近的巡逻点
+    const roads = [
+      { x: -8, z: -6 }, { x: -3, z: -3 }, { x: 3, z: -3 }, { x: 8, z: -6 },
+      { x: 11, z: 0 }, { x: 7, z: 4 }, { x: 0, z: 5 }, { x: -7, z: 4 },
+      { x: -10, z: 0 }, { x: 0, z: -1 }
+    ];
+    return roads[Math.floor(Math.random() * roads.length)];
+  }
+
   // ============ Game state ============
-  let player, enemies, bullets, particles;
+  let player = null, enemies = [], bullets = [], particles = [];
   let score = 0;
   let running = false;
   let lastTime = 0;
-  let mouse = { x: PIXEL_W * 0.5, y: PIXEL_H * 0.42, down: false };
+  let mouse = { x: (window.innerWidth || PIXEL_W) * 0.5, y: (window.innerHeight || PIXEL_H) * 0.4, down: false };
+  let touchFiring = false;
+  let rmbDown = false;              // 右键按住 = 拖拽环视
+  let rmbLast = { x: 0, y: 0 };
+  // 最近一次输入设备：'mouse' | 'touch'（兼容“带触屏的电脑”用鼠标玩）
+  let lastInput = 'mouse';
+  let suppressMouseUntil = 0; // 触摸后短暂忽略浏览器模拟的鼠标事件
+  let touchUIVisible = false; // 触屏控件（摇杆/按钮）当前是否显示
   let aimWorld = { x: 0, z: 60 };
-    let moveTouchId = null;
-    let aimTouchId = null;
-    let moveTouchStart = { x: 0, y: 0 };
-    let moveTouchCur = { x: 0, y: 0 };
+  let viewYaw = 0;
+  let viewPitch = 0.35; // 目前只用于视角高度微调，炮弹仍水平
+  let moveTouchId = null;
+  let aimTouchId = null;
+  let moveTouchStart = { x: 0, y: 0 };
+  let moveTouchCur = { x: 0, y: 0 };
+  let aimTouchLast = { x: 0, y: 0 };
 
-  const MAP_HALF = 38;
+  const MAP_HALF = 55;
   const FOV = (55 * Math.PI) / 180;
   const NEAR = 0.1;
   const FAR = 220;
   const CAM_DIST = 11;
   const CAM_HEIGHT = 5.6;
 
-  function resetGame() {
+  // ---------- 难度 ----------
+  const DIFF_LABEL = { easy: '休闲', normal: '标准', hard: '困难' };
+  let difficulty = 'normal';
+  function diffFactors() {
+    if (difficulty === 'easy') return { aimErr: 1.7, fireCd: 1.45, countBonus: -1, speed: 0.92, extraDetect: -6, penBonus: -0.08 };
+    if (difficulty === 'hard') return { aimErr: 0.6, fireCd: 0.8, countBonus: 2, speed: 1.06, extraDetect: 7, penBonus: 0.07 };
+    return { aimErr: 1, fireCd: 1, countBonus: 0, speed: 1, extraDetect: 0, penBonus: 0 };
+  }
+  function applyDifficulty(d) {
+    difficulty = d;
+    if (diffBtnEls) diffBtnEls.forEach(b => b.classList.toggle('active', b.dataset.diff === d));
+    updateHud();
+  }
+
+  // ---------- 波次 / 最高分 ----------
+  const WAVE_COUNT = 6;
+  let wave = 0;
+  let phase = 'idle';   // break | battle | won | over
+  let breakTimer = 0;
+  let wrecks = [];
+  let crates = [];
+  let bestScore = 0;
+  let isNewBest = false;
+  let muted = false;
+  let bannerTimer = null;
+  let lastBreakSec = -1;
+  let lastWarnTime = 0;
+  const BEST_KEY = 'pixelTankWarBestV2';
+  try { bestScore = parseInt(localStorage.getItem(BEST_KEY), 10) || 0; } catch (e) {}
+  function saveBest() { try { localStorage.setItem(BEST_KEY, String(bestScore)); } catch (e) {} }
+
+  function resetTouchInputs() {
+    aimTouchId = null;
     resetMoveBase();
+    keys['KeyF'] = false;
+    repairBtnOn(false);
+  }
+  function repairBtnOn(on) {
+    if (repairBtnEl) {
+      if (on) repairBtnEl.classList.add('on');
+      else repairBtnEl.classList.remove('on');
+    }
+  }
+
+  function resetGame() {
+    resetTouchInputs();
     score = 0;
+    isNewBest = false;
     bullets = [];
     particles = [];
-    player = createTank('tiger', 0, 34, Math.PI, 'player');
-    player.hp = 100;
-    player.turretYaw = Math.PI;
-    enemies = [
-      createTank('t34', -20, -18, 0.2, 'enemy'),
-      createTank('t34', 18, -16, -0.3, 'enemy'),
-      createTank('t34', 2, -6, 0.0, 'enemy'),
-      createTank('t34', -25, 8, 1.2, 'enemy')
-    ];
+    wrecks = [];
+    crates = [];
+    battleMsgEl.innerHTML = '';
+    waveBannerEl.style.display = 'none';
+    const sp = randomPlayerSpawn();
+    player = createTank('tiger', sp.x, sp.z, sp.yaw, 'player');
+    player.turretYaw = sp.yaw;
+    viewYaw = sp.yaw;
+    viewPitch = 0.35;
+    crosshairEl.style.left = '50%';
+    crosshairEl.style.top = '50%';
+    enemies = [];
+    wave = 0;
+    phase = 'break';
+    breakTimer = 2.2;
+    showWaveBanner('准备战斗', '第 1 波敌军即将抵达…');
     updateHud();
+    repairBarEl.style.display = 'none';
+    finalStatsEl.style.display = 'none';
+    newBestEl.style.display = 'none';
     overlayEl.style.display = 'none';
     gameOverMsg.style.display = 'none';
     gameWinMsg.style.display = 'none';
   }
 
+  function waveCounts(w) {
+    const f = diffFactors();
+    const table = {
+      1: [3, 0, 0],
+      2: [3, 1, 0],
+      3: [4, 1, 1],
+      4: [4, 2, 1],
+      5: [5, 2, 2],
+      6: [5, 3, 2]
+    };
+    const base = table[Math.min(w, 6)] || [6, 3, 2];
+    let t = base[0], su = base[1], kv = base[2];
+    if (w > 6) {
+      su = Math.min(su + (w - 6), 5);
+      kv = Math.min(kv + Math.floor((w - 6) / 2), 4);
+      t = Math.min(t + 2, 7);
+    }
+    // 难度加成
+    t = Math.max(1, t + f.countBonus);
+    if (f.countBonus > 0 && w >= 2) su = Math.min(su + 1, 5);
+    const arr = [];
+    for (let i = 0; i < kv; i++) arr.push('kv1');
+    for (let i = 0; i < su; i++) arr.push('su85');
+    for (let i = 0; i < t; i++) arr.push('t34');
+    // 打乱出生顺序，避免同型扎堆
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function waveDescription(w) {
+    const arr = waveCounts(w);
+    const count = {};
+    for (const ty of arr) count[ty] = (count[ty] || 0) + 1;
+    const parts = [];
+    if (count.t34) parts.push(count.t34 + ' × T-34-85');
+    if (count.su85) parts.push(count.su85 + ' × SU-85');
+    if (count.kv1) parts.push(count.kv1 + ' × KV-1');
+    return parts.join(' · ');
+  }
+
+  function findEnemySpawn() {
+    for (let i = 0; i < 70; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const r = 41 + Math.random() * 7;
+      const x = clamp(Math.cos(a) * r, -MAP_HALF + 4, MAP_HALF - 4);
+      const z = clamp(Math.sin(a) * r, -MAP_HALF + 4, MAP_HALF - 4);
+      const farFromPlayer = !player || !player.alive ||
+        ((x - player.pos.x) * (x - player.pos.x) + (z - player.pos.z) * (z - player.pos.z) > 18 * 18);
+      if (!circleHitsBuilding(x, z, 2.0) && !circleHitsTank(x, z, null, 2.0) && !circleHitsWreck(x, z, null, 2.0) && farFromPlayer) {
+        return { x, z, yaw: Math.atan2(-x, -z) + (Math.random() - 0.5) * 0.4 };
+      }
+    }
+    // 兜底：村庄外圈角点
+    const cands = [[-48,0],[48,0],[0,-48],[0,48],[-48,-48],[48,-48],[-48,48],[48,48]];
+    for (const c of cands) {
+      if (!circleHitsBuilding(c[0], c[1], 2.0) && !circleHitsTank(c[0], c[1], null, 2.0) && !circleHitsWreck(c[0], c[1], null, 2.0)) {
+        return { x: c[0], z: c[1], yaw: Math.atan2(-c[0], -c[1]) };
+      }
+    }
+    return { x: 44, z: 44, yaw: Math.PI };
+  }
+
+  function spawnWave(w) {
+    const types = waveCounts(w);
+    enemies = [];
+    for (const ty of types) {
+      const s = findEnemySpawn();
+      const e = createTank(ty, s.x, s.z, s.yaw, 'enemy');
+      e.patrolTarget = randomPatrolPointNearVillage();
+      enemies.push(e);
+    }
+    wave = w;
+    phase = 'battle';
+    showWaveBanner('第 ' + w + ' 波', waveDescription(w));
+    sfxWave();
+    updateHud();
+  }
+
+  function showWaveBanner(title, sub) {
+    waveBannerTEl.textContent = title;
+    waveBannerSEl.textContent = sub || '';
+    waveBannerEl.style.display = 'block';
+    waveBannerEl.classList.remove('pop');
+    void waveBannerEl.offsetWidth; // 重启动画
+    waveBannerEl.classList.add('pop');
+    if (bannerTimer) clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => { waveBannerEl.style.display = 'none'; }, 3400);
+  }
+
+  function addWreck(t) {
+    wrecks.push({ x: t.pos.x, z: t.pos.z, yaw: t.yaw, type: t.type, timer: 9, smokeAcc: 0 });
+  }
+
   function updateHud() {
-    const pct = player ? Math.max(0, Math.round(player.hp)) : 0;
-    hpFillEl.style.width = pct + '%';
     scoreEl.textContent = score;
-    if (player && player.hp <= 0) hpFillEl.style.background = '#7a2720';
-    else hpFillEl.style.background = '';
+    if (bestScoreEl) bestScoreEl.textContent = bestScore;
+    if (bestScoreLineEl) bestScoreLineEl.textContent = bestScore;
+    if (waveCurEl) waveCurEl.textContent = wave;
+    if (waveTotalEl) waveTotalEl.textContent = WAVE_COUNT;
+    if (diffLabelEl) diffLabelEl.textContent = DIFF_LABEL[difficulty] || difficulty;
+    const alive = enemies ? enemies.reduce((n, e) => n + (e.alive ? 1 : 0), 0) : 0;
+    if (enemiesLeftEl) enemiesLeftEl.textContent = alive;
+    if (!player) return;
+    const m = player.modules;
+    const ok = '<b class="ok">完好</b>';
+    const bad = '<b class="bad">损坏</b>';
+    const powerOk = m.engine === 1 && (m.trackL + m.trackR) > 0;
+    const weaponOk = m.turret === 1 && m.gun === 1;
+    moduleStatusEl.innerHTML =
+      '<span class="mod">动力 ' + (powerOk ? ok : bad) + '</span>' +
+      '<span class="mod">武器 ' + (weaponOk ? ok : bad) + '</span>' +
+      '<span class="mod">乘员 <b>' + m.crew + '</b></span>';
+  }
+
+  function updateRepairUI() {
+    if (!player || !player.alive) {
+      repairBarEl.style.display = 'none';
+      return;
+    }
+    if (player.repair > 0 && player.repair < 5) {
+      repairBarEl.style.display = 'block';
+      repairFillEl.style.width = (player.repair / 5 * 100) + '%';
+    } else {
+      repairBarEl.style.display = 'none';
+    }
+  }
+
+  function finishRepair() {
+    const m = player.modules;
+    m.engine = 1;
+    m.trackL = 1;
+    m.trackR = 1;
+    m.turret = 1;
+    m.gun = 1;
+    player.repair = 0;
+    updateHud();
+    sfxRepair();
+    battleMsg('车辆维修完成！', 'rich');
+  }
+
+  function battleMsg(text, cls) {
+    const el = document.createElement('div');
+    el.className = 'msg ' + (cls || 'hit');
+    el.textContent = text;
+    battleMsgEl.appendChild(el);
+    while (battleMsgEl.children.length > 5) battleMsgEl.removeChild(battleMsgEl.firstChild);
+    setTimeout(() => {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 1800);
   }
 
   // ============ Input ============
@@ -713,31 +1577,87 @@
   window.addEventListener('keydown', e => {
     if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
     keys[e.code] = true;
+    if (e.code === 'KeyM') toggleMute();
   });
   window.addEventListener('keyup', e => { keys[e.code] = false; });
-
-  function updateMouseScreen(clientX, clientY) {
-    const r = canvas.getBoundingClientRect();
-    mouse.x = (clientX - r.left) / r.width * PIXEL_W;
-    mouse.y = (clientY - r.top) / r.height * PIXEL_H;
-    crosshairEl.style.left = clientX + 'px';
-    crosshairEl.style.top = clientY + 'px';
-  }
-  window.addEventListener('mousemove', e => {
-    if (running) updateMouseScreen(e.clientX, e.clientY);
+  // 失焦 / 切出窗口时清空按键，避免“幽灵漂移”
+  window.addEventListener('blur', () => {
+    for (const k in keys) keys[k] = false;
+    mouse.down = false;
+    touchFiring = false;
+    resetTouchInputs();
   });
-  window.addEventListener('mousedown', e => {
-    if (e.button === 0 && running) {
-      mouse.down = true;
-      tryFirePlayer();
+
+  function toggleMute() {
+    muted = !muted;
+    if (muteBtnEl) muteBtnEl.textContent = muted ? '🔇' : '🔊';
+    if (!muted) sfxClick();
+  }
+
+  // 鼠标：自由光标 = 准星瞄点；把光标推到屏幕边缘附近会平移视角（类战争雷霆鼠标瞄准）
+  window.addEventListener('mousemove', e => {
+    if (!running) return;
+    if (rmbDown) {
+      // 右键按住拖动 = 环视/快速转头（不改变炮口指向，松开后炮塔重新找瞄点）
+      const sx = 0.0022, sy = 0.0009;
+      viewYaw += (e.clientX - rmbLast.x) * sx;
+      viewPitch = clamp(viewPitch - (e.clientY - rmbLast.y) * sy, 0.12, 1.0);
+      rmbLast.x = e.clientX;
+      rmbLast.y = e.clientY;
+      return;
+    }
+    if (performance.now() < suppressMouseUntil) return; // 触摸刚结束：忽略模拟鼠标
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+    if (lastInput !== 'mouse') {
+      lastInput = 'mouse';
+      syncTouchUI(); // 开始用鼠标 → 收起触屏控件
     }
   });
-  window.addEventListener('mouseup', e => { if (e.button === 0) mouse.down = false; });
+  window.addEventListener('mousedown', e => {
+    if (!running) return;
+    if (e.button === 2) {
+      rmbDown = true;
+      rmbLast.x = e.clientX;
+      rmbLast.y = e.clientY;
+      return;
+    }
+    if (e.button === 0) {
+      ensureAudio();
+      mouse.down = true; // 按住：炮塔对准且装填完成后由主循环自动开火
+    }
+  });
+  window.addEventListener('mouseup', e => {
+    if (e.button === 0) mouse.down = false;
+    if (e.button === 2) rmbDown = false;
+  });
   canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+  // 难度切换
+  diffBtnEls.forEach(b => b.addEventListener('click', () => {
+    ensureAudio();
+    sfxClick();
+    applyDifficulty(b.dataset.diff);
+  }));
+
+  // 静音按钮（菜单界面同样可用）
+  if (muteBtnEl) muteBtnEl.addEventListener('click', () => {
+    ensureAudio();
+    toggleMute();
+  });
+
   startBtn.addEventListener('click', () => {
+    ensureAudio();
     resetGame();
     running = true;
-    showTouchControls();
+    if (primaryTouchCoarse()) {
+      // 手机/平板：优先触屏
+      lastInput = 'touch';
+      suppressMouseUntil = performance.now() + 700;
+    } else {
+      lastInput = 'mouse';
+    }
+    syncTouchUI();
     lastTime = performance.now();
     requestAnimationFrame(loop);
   });
@@ -747,13 +1667,32 @@
     return 'ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
   }
 
-  function showTouchControls() {
-    if (!isTouchDevice()) return;
-    touchControlsEl.classList.add('active');
-    fireBtn.style.display = 'block';
-    mobileHintEl.style.display = 'inline';
+  function primaryTouchCoarse() {
+    if (!isTouchDevice()) return false;
+    try {
+      return !!(window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+    } catch (e) { return false; }
   }
-  if (isTouchDevice()) {
+
+  function setTouchUI(show) {
+    if (touchUIVisible === show) return;
+    touchUIVisible = show;
+    if (show) {
+      touchControlsEl.classList.add('active');
+      fireBtn.style.display = 'block';
+      repairBtnEl.style.display = 'flex';
+    } else {
+      touchControlsEl.classList.remove('active');
+      fireBtn.style.display = 'none';
+      repairBtnEl.style.display = 'none';
+    }
+  }
+
+  // 根据“当前在用鼠标还是触摸”刷新触屏控件是否显示
+  function syncTouchUI() {
+    setTouchUI(lastInput === 'touch' || primaryTouchCoarse());
+  }
+  if (primaryTouchCoarse()) {
     mobileHintEl.style.display = 'inline';
   }
 
@@ -791,6 +1730,9 @@
 
   function handleTouchStart(e) {
     if (!running) return;
+    lastInput = 'touch';
+    suppressMouseUntil = performance.now() + 900;
+    syncTouchUI();
     e.preventDefault();
     const halfX = window.innerWidth * 0.45;
     for (let i = 0; i < e.changedTouches.length; i++) {
@@ -809,20 +1751,29 @@
       }
       if (aimTouchId === null && t.clientX >= halfX) {
         aimTouchId = t.identifier;
-        updateMouseScreen(t.clientX, t.clientY);
+        aimTouchLast.x = t.clientX;
+        aimTouchLast.y = t.clientY;
       }
     }
   }
 
   function handleTouchMove(e) {
     if (!running) return;
+    lastInput = 'touch';
+    suppressMouseUntil = performance.now() + 900;
+    syncTouchUI();
     e.preventDefault();
     for (let i = 0; i < e.changedTouches.length; i++) {
       const t = e.changedTouches[i];
       if (t.identifier === moveTouchId) {
         updateMoveTouch(t);
       } else if (t.identifier === aimTouchId) {
-        updateMouseScreen(t.clientX, t.clientY);
+        const dx = t.clientX - aimTouchLast.x;
+        const dy = t.clientY - aimTouchLast.y;
+        viewYaw += dx * 0.0035;
+        viewPitch = clamp(viewPitch - dy * 0.0015, 0.15, 1.0);
+        aimTouchLast.x = t.clientX;
+        aimTouchLast.y = t.clientY;
       }
     }
   }
@@ -846,10 +1797,24 @@
   canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
   canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-  fireBtn.addEventListener('touchstart', e => {
+  // 触摸“开火”：按住可连射（自动装填由主循环处理）
+  fireBtn.addEventListener('pointerdown', e => {
     e.preventDefault();
-    if (running) tryFirePlayer();
+    touchFiring = true;
+    if (running) { ensureAudio(); tryFirePlayer(false); }
   }, { passive: false });
+  ['pointerup', 'pointercancel'].forEach(ev =>
+    fireBtn.addEventListener(ev, e => { e.preventDefault(); touchFiring = false; }, { passive: false }));
+  // 触摸“按住维修”（须停车；松开即取消）
+  repairBtnEl.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    if (!running) return;
+    resetMoveBase();
+    keys['KeyF'] = true;
+    repairBtnOn(true);
+  }, { passive: false });
+  ['pointerup', 'pointercancel'].forEach(ev =>
+    repairBtnEl.addEventListener(ev, e => { e.preventDefault(); keys['KeyF'] = false; repairBtnOn(false); }, { passive: false }));
 
   // ============ Movement helpers ============
   function fwdVec(tank) { return dirFromYaw(tank.yaw); }
@@ -858,14 +1823,13 @@
   function pivotWorld(tank) {
     const f = fwdVec(tank);
     const r = rightFromYaw(tank.yaw);
-    // hull origin at y=0, turret ring local offset
-    const ox = tank.type === 'tiger' ? 0 : 0;
-    const oy = tank.type === 'tiger' ? 1.35 : 1.10;
-    const oz = tank.type === 'tiger' ? 0.15 : 0.1;
+    // 炮塔回转中心（车体上方，略偏前）
+    const oy = (tank.def && tank.def.pivotOy) || 1.2;
+    const oz = (tank.def && tank.def.pivotOz) || 0.1;
     return {
-      x: tank.pos.x + r[0]*ox + f[0]*oz,
+      x: tank.pos.x + f[0] * oz,
       y: oy,
-      z: tank.pos.z + r[2]*ox + f[2]*oz
+      z: tank.pos.z + f[2] * oz
     };
   }
 
@@ -880,206 +1844,345 @@
     };
   }
 
-  function updateAimFromMouse() {
-    // world camera basis
-    const eye = getCameraEye();
-    const look = getCameraLook();
-    let F = [look[0]-eye[0], look[1]-eye[1], look[2]-eye[2]];
-    F = normalize3(F);
-    const R = normalize3(cross3(F, [0,1,0]));
-    const U = cross3(R, F);
-    const aspect = PIXEL_W / PIXEL_H;
-    const ndcX = (mouse.x / PIXEL_W) * 2 - 1;
-    const ndcY = 1 - (mouse.y / PIXEL_H) * 2;
-    const tanHalf = Math.tan(FOV / 2);
-    let dir = [
-      F[0] + R[0] * ndcX * tanHalf * aspect + U[0] * ndcY * tanHalf,
-      F[1] + R[1] * ndcX * tanHalf * aspect + U[1] * ndcY * tanHalf,
-      F[2] + R[2] * ndcX * tanHalf * aspect + U[2] * ndcY * tanHalf
-    ];
-    dir = normalize3(dir);
-    const planeY = 1.0;
-    if (Math.abs(dir[1]) > 1e-6) {
-      const t = (planeY - eye[1]) / dir[1];
-      if (t > 0) {
-        aimWorld.x = eye[0] + dir[0] * t;
-        aimWorld.z = eye[2] + dir[2] * t;
-      }
-    }
+  function pushParticle(p) {
+    p.maxLife = p.life;
+    particles.push(p);
   }
 
-  function tryFirePlayer() {
-    if (!running || !player || player.hp <= 0) return;
+  function fireShell(owner, muzzle, dirYaw, speed, life, srcDef) {
+    const sh = {
+      x: muzzle.x, y: muzzle.y, z: muzzle.z,
+      vx: Math.sin(dirYaw) * speed,
+      vy: 0,
+      vz: Math.cos(dirYaw) * speed,
+      vlen: speed,
+      owner,
+      life
+    };
+    if (srcDef) sh.def = srcDef;
+    return sh;
+  }
+
+  function tryFirePlayer(silent) {
+    if (!running || !player || !player.alive) return;
+    if (!tankCanFire(player)) {
+      const now = performance.now();
+      if (!silent && now - lastWarnTime > 1400) {
+        lastWarnTime = now;
+        battleMsg('火炮或炮塔已损坏，无法开火！', 'damage');
+      }
+      return;
+    }
     if (player.cooldown > 0) return;
     const muzzle = tankMuzzleWorld(player);
     const f = turretFwdVec(player);
-    const speed = 52;
-    bullets.push({
-      x: muzzle.x,
-      y: muzzle.y,
-      z: muzzle.z,
-      vx: f[0] * speed,
-      vy: 0,
-      vz: f[2] * speed,
-      owner: 'player',
-      life: 3.0,
-      damage: 42
-    });
-    player.cooldown = 0.9;
-    spawnMuzzleParticles(muzzle);
-    navigator.vibrate && navigator.vibrate(20);
+    const speed = 120;
+    bullets.push(fireShell('player', muzzle, player.turretYaw, speed, 2.6));
+    player.cooldown = 1.05;
+    spawnMuzzleParticles(muzzle, false);
+    sfxShot('player');
+    if (navigator.vibrate) { try { navigator.vibrate(18); } catch (err) {} }
   }
 
   function fireEnemy(enemy) {
+    const def = enemy.def || TANK_DEFS.t34;
     const muzzle = tankMuzzleWorld(enemy);
-    // slight inaccuracy
-    const baseYaw = enemy.turretYaw + (Math.random() - 0.5) * 0.08;
-    const f = dirFromYaw(baseYaw);
-    const speed = 38;
-    bullets.push({
-      x: muzzle.x,
-      y: muzzle.y,
-      z: muzzle.z,
-      vx: f[0] * speed,
-      vy: 0,
-      vz: f[2] * speed,
-      owner: 'enemy',
-      life: 4.0,
-      damage: 13
-    });
-    enemy.cooldown = 2.2 + Math.random() * 1.6;
-    spawnMuzzleParticles(muzzle);
+    const fac = diffFactors();
+    const spread = Math.max(0.008, (def.aimErr || 0.04) * fac.aimErr * 1.3);
+    const baseYaw = enemy.turretYaw + (Math.random() - 0.5) * spread;
+    const speed = enemy.type === 'tiger' ? 120 : (def.muzzleSpeed || 100);
+    bullets.push(fireShell('enemy', muzzle, baseYaw, speed, 3.2, def));
+    const cd = (def.fireCd[0] + Math.random() * (def.fireCd[1] - def.fireCd[0])) * fac.fireCd;
+    enemy.cooldown = cd;
+    spawnMuzzleParticles(muzzle, false);
+    sfxShot('enemy');
   }
 
-  function spawnMuzzleParticles(muzzle) {
-    for (let i = 0; i < 8; i++) {
-      particles.push({
-        x: muzzle.x,
-        y: muzzle.y,
-        z: muzzle.z,
-        vx: (Math.random()-0.5)*6,
-        vy: Math.random()*5,
-        vz: (Math.random()-0.5)*6,
-        life: 0.22 + Math.random()*0.15,
-        maxLife: 0.35,
-        size: 0.10 + Math.random()*0.12,
-        color: [1, 0.85, 0.3]
+  function spawnMuzzleParticles(muzzle, big) {
+    const n = big ? 12 : 7;
+    for (let i = 0; i < n; i++) {
+      pushParticle({
+        kind: 'fire', x: muzzle.x, y: muzzle.y, z: muzzle.z,
+        vx: (Math.random() - 0.5) * 7,
+        vy: Math.random() * 5 + (big ? 2 : 0),
+        vz: (Math.random() - 0.5) * 7,
+        life: 0.15 + Math.random() * (big ? 0.22 : 0.12),
+        size: (big ? 0.5 : 0.28) + Math.random() * 0.35,
+        color: [1, 0.8, 0.3]
+      });
+    }
+    pushParticle({ kind: 'flash', x: muzzle.x, y: muzzle.y, z: muzzle.z, life: 0.09, size: big ? 1.6 : 1.0, color: [1, 0.95, 0.55] });
+    for (let i = 0; i < 3; i++) {
+      pushParticle({
+        kind: 'smoke', x: muzzle.x + (Math.random() - 0.5) * 0.2, y: muzzle.y, z: muzzle.z + (Math.random() - 0.5) * 0.2,
+        vx: (Math.random() - 0.5) * 1.2, vy: 0.8 + Math.random() * 1.6, vz: (Math.random() - 0.5) * 1.2,
+        life: 0.35 + Math.random() * 0.3, size: 0.22, color: [0.72, 0.7, 0.65]
+      });
+    }
+  }
+
+  function hitSpark(x, y, z) {
+    for (let i = 0; i < 9; i++) {
+      pushParticle({
+        kind: 'spark', x, y, z,
+        vx: (Math.random() - 0.5) * 10,
+        vy: 2 + Math.random() * 5,
+        vz: (Math.random() - 0.5) * 10,
+        life: 0.1 + Math.random() * 0.18,
+        size: 0.08 + Math.random() * 0.1,
+        color: [1, 0.9, 0.5]
+      });
+    }
+    sfxClang();
+  }
+
+  function dustImpact(x, y, z) {
+    for (let i = 0; i < 6; i++) {
+      pushParticle({
+        kind: 'smoke', x: x + (Math.random() - 0.5) * 0.45, y: y + 0.1, z: z + (Math.random() - 0.5) * 0.45,
+        vx: (Math.random() - 0.5) * 3, vy: 0.5 + Math.random() * 1.6, vz: (Math.random() - 0.5) * 3,
+        life: 0.45 + Math.random() * 0.5, size: 0.32 + Math.random() * 0.25, color: [0.62, 0.55, 0.42]
       });
     }
   }
 
   function explode(x, y, z, big) {
-    const n = big ? 34 : 18;
-    for (let i = 0; i < n; i++) {
+    const mul = big ? 1 : 0.55;
+    pushParticle({ kind: 'flash', x, y, z, life: 0.15, size: (big ? 3.4 : 1.6) * mul + 0.6, color: [1, 0.9, 0.55] });
+    if (big) pushParticle({ kind: 'ring', x, y: 0.35, z, life: 0.55, size: 0.6, color: [1, 0.78, 0.32] });
+    const nf = big ? 26 : 10;
+    for (let i = 0; i < nf; i++) {
       const a = Math.random() * Math.PI * 2;
-      const spd = 3 + Math.random() * (big ? 10 : 5);
-      particles.push({
-        x: x + (Math.random()-0.5)*0.3,
-        y: y + Math.random()*0.3,
-        z: z + (Math.random()-0.5)*0.3,
-        vx: Math.cos(a) * spd,
-        vy: 2 + Math.random() * (big ? 8 : 4),
-        vz: Math.sin(a) * spd,
-        life: 0.5 + Math.random() * (big ? 0.8 : 0.4),
-        maxLife: 1.4,
-        size: big ? (0.18 + Math.random()*0.35) : (0.12 + Math.random()*0.2),
-        color: Math.random() < 0.5 ? [1, 0.5, 0.15] : [0.9, 0.9, 0.1]
+      const sp = (2.5 + Math.random() * (big ? 9 : 5)) * mul + 1;
+      pushParticle({
+        kind: 'fire',
+        x: x + (Math.random() - 0.5) * 0.35,
+        y: y + Math.random() * 0.35,
+        z: z + (Math.random() - 0.5) * 0.35,
+        vx: Math.cos(a) * sp,
+        vy: (2.5 + Math.random() * (big ? 7 : 3.5)) * mul + 1.5,
+        vz: Math.sin(a) * sp,
+        life: 0.35 + Math.random() * (big ? 0.75 : 0.35),
+        size: (big ? 0.55 : 0.32) + Math.random() * (big ? 0.5 : 0.3),
+        color: Math.random() < 0.5 ? [1, 0.55, 0.15] : [0.95, 0.9, 0.2]
       });
     }
-    particles.push({ x:x, y:y, z:z, vx:0, vy:8, vz:0, life:0.7, maxLife:0.7, size:0.7, color:[0.6,0.6,0.55], smoke:true });
+    for (let i = 0; i < (big ? 12 : 5); i++) {
+      const a = Math.random() * Math.PI * 2;
+      pushParticle({
+        kind: 'smoke',
+        x: x + (Math.random() - 0.5) * 0.5,
+        y: y + (Math.random() - 0.5) * 0.4,
+        z: z + (Math.random() - 0.5) * 0.5,
+        vx: Math.cos(a) * (0.6 + Math.random() * 1.3),
+        vy: 1.2 + Math.random() * (big ? 3.6 : 2),
+        vz: Math.sin(a) * (0.6 + Math.random() * 1.3),
+        life: 0.9 + Math.random() * (big ? 1.1 : 0.6),
+        size: big ? 1.0 : 0.6,
+        color: [0.38, 0.36, 0.33]
+      });
+    }
+    for (let i = 0; i < (big ? 14 : 6); i++) {
+      pushParticle({
+        kind: 'spark', x, y, z,
+        vx: (Math.random() - 0.5) * 11,
+        vy: 2 + Math.random() * (big ? 9 : 5),
+        vz: (Math.random() - 0.5) * 11,
+        life: 0.12 + Math.random() * 0.2,
+        size: 0.09,
+        color: [1, 0.85, 0.4]
+      });
+    }
+    sfxExplode(big);
   }
 
   // ============ Enemy AI ============
   function randomPatrolTarget() {
-    return {
-      x: (Math.random() - 0.5) * (MAP_HALF * 2 - 12),
-      z: (Math.random() - 0.5) * (MAP_HALF * 2 - 12),
-      wait: 0.5 + Math.random() * 1.5
-    };
+    return Object.assign({ wait: 0.4 + Math.random() * 1.5 }, randomPatrolPointNearVillage());
   }
 
+  function tankCanMove(tank) {
+    if (!tank.alive || !tank.modules) return false;
+    return tank.modules.engine === 1 && (tank.modules.trackL + tank.modules.trackR) > 0;
+  }
+
+  function tankMoveSpeedFactor(tank) {
+    if (!tankCanMove(tank)) return 0;
+    const t = tank.modules.trackL + tank.modules.trackR;
+    return t >= 2 ? 1 : 0.35;
+  }
+
+  function tankCanTurn(tank) {
+    if (!tank.alive || !tank.modules) return false;
+    return tank.modules.engine === 1 && (tank.modules.trackL + tank.modules.trackR) > 0;
+  }
+
+  function tankCanFire(tank) {
+    if (!tank.alive || !tank.modules) return false;
+    return tank.modules.turret === 1 && tank.modules.gun === 1;
+  }
+
+  function wreckRadius(w) {
+    const d = TANK_DEFS[w.type];
+    return d ? (d.obs || d.radius) * 0.72 : 1.1;
+  }
+  function circleHitsWreck(x, z, self, radius) {
+    for (const w of wrecks) {
+      const rr = radius + wreckRadius(w);
+      const dx = x - w.x, dz = z - w.z;
+      if (dx * dx + dz * dz < rr * rr) return true;
+    }
+    return false;
+  }
+
+  // 带碰撞的移动：返回是否完整走满一步（false 表示被挡，用于 AI 绕行）
+  function moveTankCollided(tank, dist) {
+    if (!tankCanMove(tank)) return false;
+    const f = fwdVec(tank);
+    const speedFactor = tankMoveSpeedFactor(tank);
+    const step = dist * speedFactor;
+    const radius = (tank.def && tank.def.obs) ? tank.def.obs : 1.5;
+    const nx = tank.pos.x + f[0] * step;
+    const nz = tank.pos.z + f[2] * step;
+    const canPlace = (px, pz) =>
+      !circleHitsBuilding(px, pz, radius) &&
+      !circleHitsTank(px, pz, tank, radius) &&
+      !circleHitsWreck(px, pz, tank, radius);
+    if (canPlace(nx, nz)) {
+      tank.pos.x = nx;
+      tank.pos.z = nz;
+      return true;
+    }
+    if (canPlace(nx, tank.pos.z)) { tank.pos.x = nx; return false; }
+    if (canPlace(tank.pos.x, nz)) { tank.pos.z = nz; return false; }
+    return false;
+  }
+
+  // ============ Enemy AI ============
   function updateAI(enemy, dt) {
-    if (!enemy.alive) return;
+    if (!enemy.alive || !player.alive) return;
+    const def = enemy.def || TANK_DEFS.t34;
+    const fac = diffFactors();
     enemy.cooldown = Math.max(0, enemy.cooldown - dt);
     enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
+    enemy.aiTimer += dt;
+    if (enemy.alert === undefined) enemy.alert = 0;
+    if (enemy.stuckTimer === undefined) enemy.stuckTimer = 0;
+
     const dx = player.pos.x - enemy.pos.x;
     const dz = player.pos.z - enemy.pos.z;
-    const dist = Math.sqrt(dx*dx + dz*dz);
-    const detectRange = 38;
-    const fireRange = 34;
-    const preferredRange = 15 + (enemy.id ?? 0) * 2;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    const detectRange = (def.detect || 36) + fac.extraDetect;
+    const canSeePlayer = dist < detectRange && !losBlocked(enemy.pos.x, enemy.pos.z, player.pos.x, player.pos.z);
 
-    if (dist < detectRange && player.hp > 0) {
+    // 索敌记忆：看见后短暂保持警觉
+    if (canSeePlayer) {
+      enemy.alert = Math.max(enemy.alert, enemy.type === 'kv1' ? 4.5 : 3.4);
+      enemy.lastSeen = { x: player.pos.x, z: player.pos.z };
       enemy.state = 'chase';
-    } else if (enemy.state === 'chase' && dist > detectRange + 8) {
-      enemy.state = 'patrol';
-      enemy.patrolTarget = randomPatrolTarget();
+      enemy.aiTimer = 0;
+    } else {
+      enemy.alert = Math.max(0, enemy.alert - dt);
+      if (enemy.state === 'chase' && enemy.alert <= 0) {
+        enemy.state = 'patrol';
+        enemy.patrolTarget = randomPatrolTarget();
+      }
+    }
+    const aware = enemy.alert > 0;
+    const tx = aware ? player.pos.x : (enemy.lastSeen ? enemy.lastSeen.x : player.pos.x);
+    const tz = aware ? player.pos.z : (enemy.lastSeen ? enemy.lastSeen.z : player.pos.z);
+    const tdx = tx - enemy.pos.x;
+    const tdz = tz - enemy.pos.z;
+    const tdist = Math.sqrt(tdx * tdx + tdz * tdz) || 0.001;
+    const desiredYaw = Math.atan2(tdx, tdz);
+
+    // 转炮塔瞄准（无炮塔车型由车体承担）
+    if (def.turret !== false && enemy.modules.turret === 1) {
+      const tr = def.turretTurn || 3.0;
+      const dd = angleDiff(desiredYaw, enemy.turretYaw);
+      enemy.turretYaw += clamp(dd, -tr * dt, tr * dt);
+      enemy.turretYaw = clampAngle(enemy.turretYaw);
     }
 
-    // Always aim turret at player while alive.
-    const desiredTurret = Math.atan2(dx, dz);
-    const diffTurret = angleDiff(desiredTurret, enemy.turretYaw);
-    enemy.turretYaw += clamp(diffTurret, -3.6 * dt, 3.6 * dt);
-    enemy.turretYaw = clampAngle(enemy.turretYaw);
-
-    if (enemy.state === 'chase' && player.hp > 0) {
-      const desiredYaw = Math.atan2(dx, dz);
-      // keep a preferred distance, but still approach when far
-      if (dist > preferredRange) {
-        const diff = angleDiff(desiredYaw, enemy.yaw);
-        enemy.yaw += clamp(diff, -1.8 * dt, 1.8 * dt);
-        enemy.yaw = clampAngle(enemy.yaw);
-        if (Math.abs(diff) < 0.6) {
-          moveTank(enemy, 4.2 * dt);
-        }
-      } else if (dist < preferredRange * 0.7) {
-        // reverse a bit to keep spacing
-        const diff = angleDiff(desiredYaw, enemy.yaw);
-        enemy.yaw += clamp(diff, -1.5 * dt, 1.5 * dt);
-        enemy.yaw = clampAngle(enemy.yaw);
-        moveTank(enemy, -2.0 * dt);
-      } else {
-        // stop and track
-        const diff = angleDiff(desiredYaw, enemy.yaw);
-        enemy.yaw += clamp(diff, -1.5 * dt, 1.5 * dt);
+    if (aware) {
+      const pref = def.prefRange || 14;
+      const fireRange = def.fireRange || 32;
+      const speed = (def.speed || 3.4) * fac.speed;
+      // 距离保持
+      let dirMove = 0;
+      if (tdist > pref * 1.18) dirMove = 1;
+      else if (tdist < pref * 0.55) dirMove = -1;
+      const diffHull = angleDiff(desiredYaw, enemy.yaw);
+      const hullTurn = (def.turn || 1.6);
+      if (tankCanTurn(enemy)) {
+        enemy.yaw += clamp(diffHull, -hullTurn * dt, hullTurn * dt);
         enemy.yaw = clampAngle(enemy.yaw);
       }
-
-      if (Math.abs(angleDiff(enemy.turretYaw, desiredTurret)) < 0.12 && dist < fireRange && enemy.cooldown <= 0) {
+      if (dirMove !== 0 && Math.abs(diffHull) < 0.6) {
+        const moved = moveTankCollided(enemy, dirMove * speed * dt);
+        if (!moved) {
+          enemy.stuckTimer += dt;
+          // 被建筑挡住：逐渐转向绕行，卡死过久则大幅转向
+          if (enemy.stuckTimer > 0.45) {
+            const sd = Math.random() < 0.5 ? 1 : -1;
+            enemy.yaw += sd * (2.0 + enemy.stuckTimer) * dt;
+            enemy.yaw = clampAngle(enemy.yaw);
+          }
+          if (enemy.stuckTimer > 2.4) {
+            enemy.yaw = clampAngle(enemy.yaw + (Math.random() < 0.5 ? 1 : -1) * 1.2);
+            enemy.stuckTimer = 0;
+          }
+        } else {
+          enemy.stuckTimer = Math.max(0, enemy.stuckTimer - dt * 2);
+        }
+      } else {
+        enemy.stuckTimer = Math.max(0, enemy.stuckTimer - dt);
+      }
+      // 开火
+      const aimOK = def.turret === false
+        ? Math.abs(angleDiff(enemy.yaw, desiredYaw)) < 0.08
+        : Math.abs(angleDiff(enemy.turretYaw, desiredYaw)) < (def.aimTol || 0.09);
+      if (enemy.cooldown <= 0 && aimOK && canSeePlayer && tdist < fireRange && tankCanFire(enemy)) {
         fireEnemy(enemy);
       }
     } else {
-      // Patrol
+      // Patrol / 搜索（村庄道路巡逻）
       if (!enemy.patrolTarget) enemy.patrolTarget = randomPatrolTarget();
       const p = enemy.patrolTarget;
       const pdx = p.x - enemy.pos.x;
       const pdz = p.z - enemy.pos.z;
-      const pdist = Math.sqrt(pdx*pdx + pdz*pdz);
-      if (pdist < 1.2) {
+      const pdist = Math.sqrt(pdx * pdx + pdz * pdz);
+      if (pdist < 1.4) {
         if (p.wait <= 0) {
           enemy.patrolTarget = randomPatrolTarget();
         } else {
           p.wait -= dt;
-          enemy.turretYaw = enemy.yaw + 0.15 * Math.sin(performance.now() * 0.001);
+          if (def.turret !== false && enemy.modules.turret === 1) {
+            enemy.turretYaw = enemy.yaw + 0.25 * Math.sin(performance.now() * 0.0012);
+          }
         }
       } else {
-        const desiredYaw = Math.atan2(pdx, pdz);
-        const diff = angleDiff(desiredYaw, enemy.yaw);
-        enemy.yaw += clamp(diff, -1.2 * dt, 1.2 * dt);
-        enemy.yaw = clampAngle(enemy.yaw);
-        if (Math.abs(diff) < 0.5) {
-          moveTank(enemy, 2.6 * dt);
+        const pdYaw = Math.atan2(pdx, pdz);
+        const pdDiff = angleDiff(pdYaw, enemy.yaw);
+        if (tankCanTurn(enemy)) {
+          enemy.yaw += clamp(pdDiff, -(def.turn || 1.2) * 0.75 * dt, (def.turn || 1.2) * 0.75 * dt);
+          enemy.yaw = clampAngle(enemy.yaw);
         }
-        enemy.turretYaw = enemy.yaw;
+        if (Math.abs(pdDiff) < 0.5) {
+          moveTankCollided(enemy, (def.speed || 2.8) * 0.6 * dt);
+        }
+        if (def.turret !== false && enemy.modules.turret === 1) {
+          enemy.turretYaw = enemy.yaw;
+        }
       }
     }
+    // 无炮塔车型：火炮始终指向车头
+    if (def.turret === false) enemy.turretYaw = enemy.yaw;
     clampToMap(enemy);
   }
 
   function moveTank(tank, dist) {
-    const f = fwdVec(tank);
-    tank.pos.x += f[0] * dist;
-    tank.pos.z += f[2] * dist;
+    moveTankCollided(tank, dist);
   }
 
   function clampToMap(tank) {
@@ -1087,113 +2190,530 @@
     tank.pos.z = clamp(tank.pos.z, -MAP_HALF + 2, MAP_HALF - 2);
   }
 
-  function updatePlayer(dt) {
-    if (player.hp <= 0) return;
-    player.cooldown = Math.max(0, player.cooldown - dt);
-    const f = fwdVec(player);
-    const s = 7.2;
-    let moved = false;
-    if (keys['KeyW']) { player.pos.x += f[0] * s * dt; player.pos.z += f[2] * s * dt; moved = true; }
-    if (keys['KeyS']) { player.pos.x -= f[0] * s * dt; player.pos.z -= f[2] * s * dt; moved = true; }
-    if (keys['KeyA']) { player.yaw -= 1.7 * dt; moved = true; }
-    if (keys['KeyD']) { player.yaw += 1.7 * dt; moved = true; }
-    player.yaw = clampAngle(player.yaw);
-    clampToMap(player);
+  // ============ 操作手感：类战争雷霆鼠标瞄准 ============
+  // 鼠标 = 自由准星；炮塔以有限转速自动转向准星瞄点；按住开火键，炮口到位 + 装填完成即发射
+  const TURRET_TURN_RATE = 2.3;   // 玩家炮塔回转角速度 rad/s（约 130°/s，偏街机手感）
+  const GUN_ALIGN_TOL = 0.05;     // 允许开火的炮口-瞄点对齐误差（弧度）
+  const AIM_FAR = 80;             // 准星瞄点在远处的投影距离
+  const AIM_OFFSET_MAX = 0.6;     // 光标在屏幕内的最大瞄偏角（相对视角方向）
+  const PAN_DEAD = 0.1;           // 屏幕中央死区（光标越过此范围即开始平移视角）
+  const PAN_RATE_X = 2.6;         // 光标推至边缘时视角水平转速 rad/s
+  const PAN_RATE_Y = 1.45;        // 视角垂直转速 rad/s
+  let aimRefYaw = 0;              // 本帧期望炮塔绝对朝向（来自瞄点）
 
-    // aim
-    updateAimFromMouse();
-    const pivot = pivotWorld(player);
-    const desiredTurret = Math.atan2(aimWorld.x - pivot.x, aimWorld.z - pivot.z);
-    const diff = angleDiff(desiredTurret, player.turretYaw);
-    player.turretYaw += clamp(diff, -4.0 * dt, 4.0 * dt);
+  function mouseNorm() {
+    const w = window.innerWidth || 1, h = window.innerHeight || 1;
+    return {
+      nx: clamp((mouse.x / w - 0.5) * 2, -1, 1),
+      ny: clamp((mouse.y / h - 0.5) * 2, -1, 1)
+    };
+  }
+
+  // 是否应跟随鼠标：必须是最近一次真实鼠标事件驱动，且右屏没有正在拖动的触控
+  function usingMouseAim() {
+    return lastInput === 'mouse' && aimTouchId === null;
+  }
+
+  // 光标推出屏幕中央死区 → 平移视角（鼠标瞄准式视角）
+  function panViewFromCursor(dt) {
+    if (!usingMouseAim()) return;
+    const n = mouseNorm();
+    const ax = Math.abs(n.nx), ay = Math.abs(n.ny);
+    if (ax > PAN_DEAD) {
+      const k = Math.pow((ax - PAN_DEAD) / (1 - PAN_DEAD), 1.35);
+      viewYaw += (n.nx > 0 ? 1 : -1) * PAN_RATE_X * k * dt;
+    }
+    if (ay > PAN_DEAD) {
+      const k = Math.pow((ay - PAN_DEAD) / (1 - PAN_DEAD), 1.35);
+      viewPitch = clamp(viewPitch + (n.ny < 0 ? 1 : -1) * PAN_RATE_Y * k * dt, 0.12, 1.0);
+    }
+  }
+
+  // 计算准星瞄点：优先吸附准星下方的敌人，否则瞄向视角方向的远处地面
+  function computeAimTarget() {
+    if (!player || !player.alive) return null;
+    if (!usingMouseAim()) {
+      // 触屏 / 触摸拖动时：右侧拖屏直接控制视角，瞄点 = 屏幕中央
+      aimRefYaw = viewYaw;
+    } else {
+      const n = mouseNorm();
+      const off = n.nx * AIM_OFFSET_MAX;
+      aimRefYaw = clampAngle(viewYaw + off);
+      // 吸附敌人（准星覆盖在可见敌人身上时锁定该车）
+      const locked = pickEnemyUnderCursor();
+      if (locked) {
+        aimRefYaw = Math.atan2(locked.pos.x - player.pos.x, locked.pos.z - player.pos.z);
+        aimWorld.x = locked.pos.x;
+        aimWorld.z = locked.pos.z;
+        return locked;
+      }
+    }
+    const f = dirFromYaw(aimRefYaw);
+    aimWorld.x = player.pos.x + f[0] * AIM_FAR;
+    aimWorld.z = player.pos.z + f[2] * AIM_FAR;
+    return null;
+  }
+
+  // 准星吸附：把屏幕坐标离准星最近的活敌车作为目标
+  function pickEnemyUnderCursor() {
+    let best = null, bestD = Infinity;
+    for (const e of enemies) {
+      if (!e.alive) continue;
+      const s = worldToScreen(e.pos.x, 1.3, e.pos.z);
+      if (!s) continue;
+      const dx = s[0] - mouse.x, dy = s[1] - mouse.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < bestD) { best = e; bestD = d2; }
+    }
+    if (best && bestD < 34 * 34) return best; // 吸附半径 34px
+    return null;
+  }
+
+  // 炮塔以有限转速回转对准瞄点
+  function updateTurretAim(dt) {
+    if (!player || !player.alive) return;
+    if (player.modules.turret !== 1) return; // 炮塔损坏无法转动
+    const d = angleDiff(aimRefYaw, player.turretYaw);
+    player.turretYaw += clamp(d, -TURRET_TURN_RATE * dt, TURRET_TURN_RATE * dt);
     player.turretYaw = clampAngle(player.turretYaw);
   }
 
-  // ============ Bullets ============
-  function hitTestTank(bullet, tank) {
-    if (!tank.alive) return false;
-    const dx = bullet.x - tank.pos.x;
-    const dz = bullet.z - tank.pos.z;
-    const horiz = Math.sqrt(dx*dx + dz*dz);
-    const bodyRadius = tank.type === 'tiger' ? 1.7 : 1.5;
-    if (horiz < bodyRadius + 0.18 && Math.abs(bullet.y - 1.35) < 1.7) {
-      return true;
+  // WT 式开火：按住开火键，炮口与瞄点对齐且装填完成才发射
+  function fireWhenAimed() {
+    if (!player || !player.alive || !(mouse.down || touchFiring)) return;
+    if (player.cooldown > 0) return;
+    if (!tankCanFire(player)) {
+      const now = performance.now();
+      if (now - lastWarnTime > 1400) {
+        lastWarnTime = now;
+        battleMsg('火炮或炮塔已损坏，无法开火！', 'damage');
+      }
+      return;
     }
-    return false;
+    if (Math.abs(angleDiff(aimRefYaw, player.turretYaw)) < GUN_ALIGN_TOL) {
+      tryFirePlayer(true);
+    }
+  }
+
+  // 驾驶：W 朝瞄点方向行驶（车体自动转向），S 倒车，A/D 原地或弧形转向
+  function drivePlayer(dt) {
+    if (!player.alive) return;
+    const canDrive = tankCanMove(player);
+    const canTurn = tankCanTurn(player);
+    const baseSpeed = 7.2;
+    const steer = (keys['KeyA'] ? -1 : 0) + (keys['KeyD'] ? 1 : 0); // A 左 D 右
+    const fwd = keys['KeyW'] === true;
+    const rev = keys['KeyS'] === true;
+    // 单边履带受损 → 转向减半
+    const turnRate = (player.modules.trackL === 1 && player.modules.trackR === 1) ? 1.9 : 1.0;
+    if (canTurn && steer !== 0) {
+      player.yaw += steer * turnRate * dt * (rev ? 0.5 : 1);
+      player.yaw = clampAngle(player.yaw);
+    }
+    if (canDrive) {
+      if (fwd && steer === 0) {
+        // 自动朝瞄点转向并前进（弧线趋向目标方向）
+        const d = angleDiff(aimRefYaw, player.yaw);
+        if (canTurn) {
+          player.yaw += clamp(d, -turnRate * dt, turnRate * dt);
+          player.yaw = clampAngle(player.yaw);
+        }
+        const cosA = Math.cos(clamp(d, -1.2, 1.2));
+        moveTankCollided(player, baseSpeed * Math.max(0.28, cosA) * dt);
+      } else if (fwd) {
+        moveTankCollided(player, baseSpeed * 0.75 * dt);
+      } else if (rev) {
+        moveTankCollided(player, -baseSpeed * 0.55 * dt);
+      }
+    }
+  }
+
+  function updatePlayer(dt) {
+    if (!player.alive) return;
+    player.cooldown = Math.max(0, player.cooldown - dt);
+    player.hitFlash = Math.max(0, player.hitFlash - dt);
+
+    const repairing = keys['KeyF'] === true;
+
+    // 1) 视角平移（鼠标推边）
+    panViewFromCursor(dt);
+    // 2) 计算瞄点 → 期望炮塔朝向
+    computeAimTarget();
+    // 3) 炮塔回转
+    updateTurretAim(dt);
+    // 4) 驾驶
+    if (!repairing) drivePlayer(dt);
+    clampToMap(player);
+
+    // 原地维修（F / 触摸按住）：期间禁止移动转向
+    if (keys['KeyF']) {
+      player.repair += dt;
+      if (player.repair >= 5) finishRepair();
+    } else if (player.repair > 0) {
+      player.repair = 0;
+    }
+    updateRepairUI();
+
+    // 5) 按住开火：炮口到位 + 装填完成自动发射
+    fireWhenAimed();
+
+    updateCratesPlayer();
+  }
+
+  function updateCratesPlayer() {
+    if (!player || !player.alive) return;
+    for (let i = crates.length - 1; i >= 0; i--) {
+      const c = crates[i];
+      const dx = c.x - player.pos.x;
+      const dz = c.z - player.pos.z;
+      if (dx * dx + dz * dz < 2.4 * 2.4) {
+        crates.splice(i, 1);
+        collectCrate(c);
+      }
+    }
+  }
+
+  function collectCrate(c) {
+    score += 50;
+    updateHud();
+    sfxCrate();
+    const m = player.modules;
+    const dmg = (m.engine === 0 ? 1 : 0) + (m.trackL === 0 ? 1 : 0) + (m.trackR === 0 ? 1 : 0) +
+      (m.turret === 0 ? 1 : 0) + (m.gun === 0 ? 1 : 0);
+    m.engine = 1; m.trackL = 1; m.trackR = 1; m.turret = 1; m.gun = 1;
+    updateHud();
+    battleMsg(dmg > 0 ? '拾取补给箱：全模块修复 +50' : '拾取补给箱：备件弹药补充 +50', 'rich');
+  }
+
+  // ============ Bullets / 模块损伤 ============
+
+  // 命中检测：把本帧位移当作线段与坦克圆筒做相交检测，防止高速炮弹“穿模”
+  function hitBulletTank(b, px, pz, tank) {
+    if (!tank.alive) return false;
+    const def = tank.def || TANK_DEFS.t34;
+    const r = def.radius + 0.12;
+    const dx = b.x - px, dz = b.z - pz;
+    const fx = tank.pos.x - px, fz = tank.pos.z - pz;
+    const d2 = dx * dx + dz * dz;
+    let cx = px, cz = pz;
+    if (d2 > 1e-9) {
+      let t = (fx * dx + fz * dz) / d2;
+      t = clamp(t, 0, 1);
+      cx = px + dx * t;
+      cz = pz + dz * t;
+    }
+    const ddx = cx - tank.pos.x, ddz = cz - tank.pos.z;
+    if (ddx * ddx + ddz * ddz > r * r) return false;
+    // 竖直窗口
+    const top = (def.pivotOy || 1.2) + 1.0;
+    return b.y > 0.2 && b.y < top + 0.5;
+  }
+
+  function getHitSide(tank, bx, bz) {
+    const f = fwdVec(tank);
+    const vx = bx - tank.pos.x;
+    const vz = bz - tank.pos.z;
+    const l = Math.sqrt(vx*vx + vz*vz) || 1;
+    const dot = (vx / l) * f[0] + (vz / l) * f[2];
+    if (dot > 0.45) return 'front';
+    if (dot < -0.45) return 'rear';
+    return 'side';
+  }
+
+  // 命中面（返回弹着点所在的世界坐标）
+  function impactPoint(tank, bx, bz) {
+    return { x: bx, z: bz };
+  }
+
+  // ---------- 击毁与波次流转 ----------
+  function destroyTank(target, message, byPlayer) {
+    if (!target.alive) return;
+    target.alive = false;
+    const def = target.def || TANK_DEFS.t34;
+    const x = target.pos.x, z = target.pos.z;
+    if (target.team === 'player') {
+      battleMsg(message || '虎式被击毁', 'kill');
+      explode(x, 1.5, z, true);
+      sfxTankDestroy();
+      addWreck(target);
+      recordBestIfNeeded();
+      showEndOverlay('over');
+    } else {
+      const gain = def.reward || 100;
+      score += gain;
+      updateHud();
+      addWreck(target);
+      explode(x, 1.6, z, true);
+      sfxTankDestroy();
+      battleMsg((message || ('击毁 ' + def.name)) + ' +' + gain, 'kill');
+      // 一定概率掉落补给箱（可全模块修复 / +50）
+      if (Math.random() < 0.3) {
+        crates.push({ x, z, life: 26 });
+      }
+      if (enemies.every(t => !t.alive)) onWaveCleared();
+    }
+  }
+
+  function onWaveCleared() {
+    const bonus = wave * 50;
+    score += bonus;
+    updateHud();
+    if (wave >= WAVE_COUNT) {
+      recordBestIfNeeded();
+      finalizeWin();
+    } else {
+      phase = 'break';
+      breakTimer = 3.0;
+      showWaveBanner('第 ' + wave + ' 波肃清！', '清波奖励 +' + bonus + ' · 下一波即将抵达');
+    }
+  }
+
+  // ---------- 玩家主炮 vs 敌军 ----------
+  function resolvePlayerShot(b, target) {
+    const def = target.def || TANK_DEFS.t34;
+    const side = getHitSide(target, b.x, b.z);
+    const zone = b.y > (def.cut || 1.35) ? 'turret' : 'hull';
+    // 简化“打高/打低”：正面命中炮塔时有概率算作首上/车体命中
+    const part = (side === 'front' && zone === 'turret') ? (Math.random() < 0.5 ? 'turret' : 'hull') : zone;
+
+    if (target.type === 'kv1') {
+      // KV-1：重甲，正面多半弹开；打穿也要磨掉多块再击毁
+      let bounce = 0.08;
+      if (side === 'front') bounce = part === 'turret' ? 0.52 : 0.45;
+      else if (side === 'side') bounce = 0.16;
+      else bounce = 0.1;
+      if (Math.random() < bounce) {
+        battleMsg('未击穿！KV-1 厚重的装甲弹开了炮弹', 'hit');
+        hitSpark(b.x, b.y, b.z);
+        return;
+      }
+      const m = target.modules;
+      const r = Math.random();
+      if (side === 'rear' && r < 0.5) {
+        destroyTank(target, '击穿车尾！KV-1 弹药架殉爆', true);
+        return;
+      }
+      // 击穿 → 掉乘员 / 毁模块
+      const lost = side === 'side' ? 2 : 1;
+      m.crew = Math.max(0, m.crew - lost);
+      if (side === 'side' && r < 0.3) { m.trackL = 0; m.trackR = 0; }
+      else if (part === 'turret' && r < 0.5) { m.turret = 0; }
+      else if (part === 'hull' && r < 0.45) { m.engine = 0; }
+      explode(b.x, b.y, b.z, false);
+      if (m.crew <= 0) {
+        destroyTank(target, '击穿！KV-1 乘员全部阵亡', true);
+      } else {
+        battleMsg('击穿 KV-1！车组成员伤亡，但仍在抵抗', 'damage');
+        updateHud();
+      }
+      return;
+    }
+
+    if (target.type === 'su85') {
+      // SU-85：无炮塔歼击车，装甲很薄，正面才有较大概率被跳弹
+      const bounce = (side === 'front' && part === 'turret') ? 0.32 : (side === 'front' ? 0.22 : 0.1);
+      if (Math.random() < bounce) {
+        battleMsg('未击穿！SU-85 大倾角正面装甲弹开炮弹', 'hit');
+        hitSpark(b.x, b.y, b.z);
+        return;
+      }
+      if (side === 'front' && part === 'hull' && Math.random() < 0.45) {
+        // 打穿首上：瘫痪但不算瞬间殉爆，随后补一发即可
+        target.modules.engine = 0;
+        target.modules.trackL = 0;
+        target.modules.trackR = 0;
+        target.modules.crew = Math.max(0, target.modules.crew - 2);
+        explode(b.x, b.y, b.z, false);
+        if (target.modules.crew <= 0) {
+          destroyTank(target, '击穿！SU-85 乘员全灭', true);
+        } else {
+          battleMsg('击穿 SU-85 首上！车辆瘫痪，车组仍在作战', 'damage');
+          updateHud();
+        }
+        return;
+      }
+      destroyTank(target, '击穿薄弱装甲！SU-85 殉爆', true);
+      return;
+    }
+
+    // T-34-85
+    if (side === 'front' && part === 'turret') {
+      if (Math.random() < 0.62) {
+        battleMsg('未击穿！T-34 正面炮塔跳弹', 'hit');
+        hitSpark(b.x, b.y, b.z);
+        return;
+      }
+      destroyTank(target, '击穿炮塔！T-34-85 车组成员全灭', true);
+      return;
+    }
+    if (side === 'front' && part === 'hull') {
+      if (Math.random() < 0.2) {
+        battleMsg('未击穿！T-34 首上装甲弹开炮弹', 'hit');
+        hitSpark(b.x, b.y, b.z);
+        return;
+      }
+      // 击穿首上：驾驶员/车长阵亡，车辆瘫痪
+      target.modules.engine = 0;
+      target.modules.trackL = 0;
+      target.modules.trackR = 0;
+      target.modules.crew = Math.max(0, target.modules.crew - 2);
+      explode(b.x, b.y, b.z, false);
+      if (target.modules.crew <= 0) {
+        destroyTank(target, 'T-34-85 成员全灭', true);
+      } else {
+        battleMsg('击穿首上！驾驶员和车长阵亡，T-34-85 无法移动', 'damage');
+        updateHud();
+      }
+      return;
+    }
+    // 侧 / 后
+    if (Math.random() < 0.15) {
+      battleMsg('未击穿！角度不好弹开了', 'hit');
+      hitSpark(b.x, b.y, b.z);
+      return;
+    }
+    destroyTank(target, '击穿薄弱装甲！T-34-85 殉爆', true);
+  }
+
+  // ---------- 敌军主炮 vs 玩家虎式 ----------
+  function hitPlayerTiger(b, target) {
+    const def = target.def || TANK_DEFS.tiger;
+    const side = getHitSide(target, b.x, b.z);
+    const zone = b.y > (def.cut || 1.42) ? 'turret' : 'hull';
+    const f = (b.def && b.def.penPower) ? b.def.penPower : 1;
+    let base;
+    if (side === 'front') base = zone === 'turret' ? 0.09 : 0.2;
+    else if (side === 'side') base = zone === 'turret' ? 0.42 : 0.5;
+    else base = 0.42;
+    const penChance = clamp(base * f, 0.02, 0.95);
+    if (Math.random() > penChance) {
+      battleMsg('敌方炮弹未能击穿虎式装甲！', 'hit');
+      hitSpark(b.x, b.y, b.z);
+      return;
+    }
+    // 击穿：模块损伤，乘员不会太频繁地被秒
+    const m = target.modules;
+    const r = Math.random();
+    if (zone === 'turret') {
+      if (r < 0.35) m.turret = 0;
+      else if (r < 0.6) m.gun = 0;
+      else m.crew = Math.max(0, m.crew - 1);
+    } else {
+      if (r < 0.35) m.engine = 0;
+      else if (r < 0.6) { m.trackL = 0; m.trackR = 0; }
+      else m.crew = Math.max(0, m.crew - 1);
+    }
+    explode(b.x, b.y, b.z, false);
+    battleMsg('被击穿！' + (m.crew <= 0 ? '乘员全部阵亡' : '虎式部件受损'), 'damage');
+    updateHud();
+    if (m.crew <= 0) destroyTank(target, '虎式乘员全部阵亡', false);
+  }
+
+  function resolveHit(b, target, byPlayer) {
+    if (byPlayer) resolvePlayerShot(b, target);
+    else hitPlayerTiger(b, target);
   }
 
   function updateBullets(dt) {
     for (let i = bullets.length - 1; i >= 0; i--) {
       const b = bullets[i];
+      const prevX = b.x, prevZ = b.z, prevY = b.y;
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       b.z += b.vz * dt;
       b.life -= dt;
       let dead = b.life <= 0;
-      if (Math.abs(b.x) > MAP_HALF + 5 || Math.abs(b.z) > MAP_HALF + 5 || b.y < 0) {
+      if (Math.abs(b.x) > MAP_HALF + 8 || Math.abs(b.z) > MAP_HALF + 8 || b.y < 0) {
         dead = true;
+      }
+      // 炮弹被建筑阻挡（墙体 → 扬尘；房檐下段算命中）
+      if (!dead) {
+        const hitB = buildingBulletBlocked(prevX, prevZ, b.x, b.z);
+        if (hitB && prevY < hitB.h + 0.5) {
+          dead = true;
+          const hx = prevX + (b.x - prevX) * 0.5;
+          const hz = prevZ + (b.z - prevZ) * 0.5;
+          explode(hx, prevY, hz, false);
+          dustImpact(hx, 0.2, hz);
+          sfxBuilImpact();
+        }
       }
       if (!dead) {
         if (b.owner === 'player') {
           for (const e of enemies) {
-            if (e.alive && hitTestTank(b, e)) {
-              e.hp -= b.damage;
+            if (hitBulletTank(b, prevX, prevZ, e)) {
               e.hitFlash = 0.2;
-              explode(b.x, b.y, b.z, false);
-              if (e.hp <= 0) {
-                e.alive = false;
-                score += 100;
-                updateHud();
-                explode(e.pos.x, 1.5, e.pos.z, true);
-                if (enemies.every(t => !t.alive)) {
-                  gameWin();
-                }
-              }
+              resolveHit(b, e, true);
               dead = true;
               break;
             }
           }
-        } else {
-          if (player.alive && player.hp > 0 && hitTestTank(b, player)) {
-            player.hp -= b.damage;
+        } else if (player.alive) {
+          if (hitBulletTank(b, prevX, prevZ, player)) {
             player.hitFlash = 0.2;
-            updateHud();
-            explode(b.x, b.y, b.z, false);
-            if (player.hp <= 0) {
-              player.hp = 0;
-              updateHud();
-              gameOver();
-            }
+            resolveHit(b, player, false);
             dead = true;
           }
         }
       }
       if (dead) {
-        // remove bullet
         bullets[i] = bullets[bullets.length - 1];
         bullets.pop();
       }
     }
   }
 
-  function gameOver() {
-    running = false;
-    gameOverMsg.style.display = 'block';
-    overlayEl.style.display = 'flex';
-    startBtn.textContent = '重新开始';
-    document.getElementById('startBtn').blur();
-    fireBtn.style.display = 'none';
-    touchControlsEl.classList.remove('active');
+  // ---------- 结算 / 最高分 ----------
+  function recordBestIfNeeded() {
+    if (score > bestScore) {
+      bestScore = score;
+      isNewBest = true;
+      saveBest();
+    }
+    if (bestScoreEl) bestScoreEl.textContent = bestScore;
+    if (bestScoreLineEl) bestScoreLineEl.textContent = bestScore;
   }
 
-  function gameWin() {
+  function hideCombatUI() {
+    setTouchUI(false);
+    repairBtnOn(false);
+    keys['KeyF'] = false;
+    mouse.down = false;
+    rmbDown = false;
+    touchFiring = false;
+    waveBannerEl.style.display = 'none';
+    crosshairEl.style.display = 'none';
+    gunMarkerEl.style.display = 'none';
+    aimHintEl.style.display = 'none';
+    crosshairEl.classList.remove('ready', 'alert');
+  }
+
+  function showEndOverlay(kind) {
     running = false;
-    gameWinMsg.style.display = 'block';
+    phase = kind; // 'over' | 'won'
+    const isWin = kind === 'won';
+    gameOverMsg.style.display = isWin ? 'none' : 'block';
+    gameWinMsg.style.display = isWin ? 'block' : 'none';
+    finalStatsEl.style.display = 'block';
+    finalStatsEl.innerHTML =
+      '本局得分 <b>' + score + '</b> · 坚持到第 <b>' + Math.max(1, wave) + ' / ' + WAVE_COUNT + '</b> 波';
+    newBestEl.style.display = isNewBest ? 'block' : 'none';
+    bestScoreLineEl.textContent = bestScore;
     overlayEl.style.display = 'flex';
-    startBtn.textContent = '重新开始';
+    startBtn.textContent = '再来一局';
     document.getElementById('startBtn').blur();
-    fireBtn.style.display = 'none';
-    touchControlsEl.classList.remove('active');
+    hideCombatUI();
+    if (isWin) sfxWin(); else sfxLose();
+  }
+
+  function finalizeWin() {
+    recordBestIfNeeded();
+    showWaveBanner('全部波次肃清！', '总得分 ' + score);
+    showEndOverlay('won');
+  }
+
+  function gameOver() {
+    // 兼容旧调用（destroyTank 已直接走 showEndOverlay('over')）
   }
 
   // ============ Particles ============
@@ -1206,19 +2726,81 @@
         particles.pop();
         continue;
       }
+      if (p.kind === 'flash' || p.kind === 'ring') continue; // 只随寿命淡出
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.z += p.vz * dt;
-      p.vy -= (p.smoke ? 0.2 : 8) * dt;
-      p.vx *= (1 - 0.4 * dt);
-      p.vz *= (1 - 0.4 * dt);
+      if (p.kind === 'fire') {
+        p.vy -= 6 * dt;
+        p.vx *= (1 - 0.9 * dt);
+        p.vz *= (1 - 0.9 * dt);
+      } else if (p.kind === 'spark') {
+        p.vy -= 9 * dt;
+      } else if (p.kind === 'smoke') {
+        p.vy += 0.7 * dt; // 缓慢上升
+        p.vx *= (1 - 1.4 * dt);
+        p.vz *= (1 - 1.4 * dt);
+      }
+    }
+  }
+
+  // 残骸持续冒烟，后期不再燃烧
+  function updateWrecks(dt) {
+    for (let i = wrecks.length - 1; i >= 0; i--) {
+      const w = wrecks[i];
+      w.timer -= dt;
+      w.smokeAcc += dt;
+      if (w.timer <= 0) {
+        wrecks.splice(i, 1);
+        continue;
+      }
+      if (w.smokeAcc > 0.16) {
+        w.smokeAcc = 0;
+        const a = Math.random() * Math.PI * 2;
+        const rr = (TANK_DEFS[w.type] ? TANK_DEFS[w.type].radius : 1.4) * 0.7;
+        pushParticle({
+          kind: 'smoke',
+          x: w.x + Math.cos(a) * rr,
+          y: 0.7 + Math.random() * 1.3,
+          z: w.z + Math.sin(a) * rr,
+          vx: Math.cos(a) * 0.5,
+          vy: 0.9 + Math.random() * 1.8,
+          vz: Math.sin(a) * 0.5,
+          life: 1.2 + Math.random() * 0.8,
+          size: 0.9,
+          color: [0.24, 0.23, 0.21]
+        });
+        if (w.timer > 4.5 && Math.random() < 0.45) {
+          pushParticle({
+            kind: 'fire',
+            x: w.x + (Math.random() - 0.5) * 1.5,
+            y: 0.6 + Math.random() * 1.5,
+            z: w.z + (Math.random() - 0.5) * 1.5,
+            vx: (Math.random() - 0.5) * 1,
+            vy: 1.6 + Math.random() * 2,
+            vz: (Math.random() - 0.5) * 1,
+            life: 0.45 + Math.random() * 0.55,
+            size: 0.3,
+            color: [1, 0.5, 0.12]
+          });
+        }
+      }
+    }
+  }
+
+  function updateCrates(dt) {
+    for (let i = crates.length - 1; i >= 0; i--) {
+      const c = crates[i];
+      c.life -= dt;
+      if (c.life <= 0) crates.splice(i, 1);
     }
   }
 
   // ============ Camera ============
   function getCameraEye() {
     if (!player) return [0, 20, 0];
-    const f = fwdVec(player);
+    // 相机跟随“视角方向”，而不是车身方向
+    const f = dirFromYaw(viewYaw);
     return [
       player.pos.x - f[0] * CAM_DIST,
       CAM_HEIGHT,
@@ -1227,11 +2809,12 @@
   }
   function getCameraLook() {
     if (!player) return [0, 0, -1];
-    const f = fwdVec(player);
+    const f = dirFromYaw(viewYaw);
+    const lookY = 1.0 + viewPitch * 4.5;
     return [
-      player.pos.x + f[0] * 2.5,
-      1.2,
-      player.pos.z + f[2] * 2.5
+      player.pos.x + f[0] * 4,
+      clamp(lookY, 1.0, 5.5),
+      player.pos.z + f[2] * 4
     ];
   }
 
@@ -1242,12 +2825,90 @@
   const modelM = mat4Create();
   const tmpM = mat4Create();
   const aspect = PIXEL_W / PIXEL_H;
+  // 相机位置缓存：用于距离雾
+  let camX = 0, camY = 0, camZ = 0;
+  let curFog = 0;
+  const FOG_COLOR = [0.60, 0.71, 0.78];
+  function fogColor(c, amt) {
+    if (amt <= 0.002) return c;
+    return [c[0] + (FOG_COLOR[0] - c[0]) * amt, c[1] + (FOG_COLOR[1] - c[1]) * amt, c[2] + (FOG_COLOR[2] - c[2]) * amt];
+  }
+
+  // 列主序矩阵 × 点（齐次）
+  function transformPoint(M, x, y, z, w) {
+    return [
+      M[0] * x + M[4] * y + M[8] * z + M[12] * w,
+      M[1] * x + M[5] * y + M[9] * z + M[13] * w,
+      M[2] * x + M[6] * y + M[10] * z + M[14] * w,
+      M[3] * x + M[7] * y + M[11] * z + M[15] * w
+    ];
+  }
+  // 世界坐标 → 屏幕像素（使用当前 view/proj；不可见返回 null）
+  function worldToScreen(x, y, z) {
+    const vp = transformPoint(viewM, x, y, z, 1);
+    const cp = transformPoint(projM, vp[0], vp[1], vp[2], vp[3]);
+    const w = cp[3];
+    if (Math.abs(w) < 1e-6) return null;
+    const nx = cp[0] / w, ny = cp[1] / w;
+    if (Math.abs(nx) > 1.4 || Math.abs(ny) > 1.4) return null;
+    const W = window.innerWidth || PIXEL_W, H = window.innerHeight || PIXEL_H;
+    return [(nx * 0.5 + 0.5) * W, (0.5 - ny * 0.5) * H];
+  }
+
+  // 每帧刷新准星 / 炮口收敛环 / 提示（WT 式瞄准反馈）
+  function updateAimUI() {
+    if (!running || !player || !player.alive) {
+      crosshairEl.style.display = 'none';
+      gunMarkerEl.style.display = 'none';
+      aimHintEl.style.display = 'none';
+      return;
+    }
+    const W = window.innerWidth || PIXEL_W, H = window.innerHeight || PIXEL_H;
+    const useMouse = usingMouseAim();
+    const cx = useMouse ? clamp(mouse.x, 0, W) : W * 0.5;
+    const cy = useMouse ? clamp(mouse.y, 0, H) : H * 0.42;
+    crosshairEl.style.display = 'block';
+    crosshairEl.style.left = cx + 'px';
+    crosshairEl.style.top = cy + 'px';
+    const err = Math.abs(angleDiff(aimRefYaw, player.turretYaw));
+    const loaded = player.cooldown <= 0;
+    const weaponOK = tankCanFire(player);
+    const ready = weaponOK && loaded && err < GUN_ALIGN_TOL;
+    crosshairEl.classList.toggle('ready', ready);
+    crosshairEl.classList.toggle('alert', weaponOK && loaded && err >= GUN_ALIGN_TOL);
+    // 炮口当前指向的“收敛环”：与准星重合时即可开火
+    const f = turretFwdVec(player);
+    const tip = worldToScreen(player.pos.x + f[0] * 60, 1.35, player.pos.z + f[2] * 60);
+    if (tip && weaponOK) {
+      const ddx = tip[0] - cx, ddy = tip[1] - cy;
+      if (ddx * ddx + ddy * ddy < 10 * 10) {
+        gunMarkerEl.style.display = 'none';
+      } else {
+        gunMarkerEl.style.display = 'block';
+        gunMarkerEl.style.left = tip[0] + 'px';
+        gunMarkerEl.style.top = tip[1] + 'px';
+      }
+    } else {
+      gunMarkerEl.style.display = 'none';
+    }
+    aimHintEl.style.display = 'block';
+    if (!weaponOK) aimHintEl.textContent = '武器已损坏';
+    else if (!loaded) aimHintEl.textContent = '装填中…';
+    else if (err >= GUN_ALIGN_TOL) aimHintEl.textContent = '炮塔转动中，对准准星后自动开火';
+    else aimHintEl.style.display = 'none';
+  }
 
   function drawTank(tank) {
     if (!tank.alive) return;
     const f = fwdVec(tank);
     const r = rightFromYaw(tank.yaw);
     const pos = tank.pos;
+    // 中弹白闪
+    const flashOn = tank.hitFlash > 0;
+    const boxColor = (c) => {
+      if (!flashOn) return c;
+      return [Math.min(1, c[0] + 0.55), Math.min(1, c[1] + 0.55), Math.min(1, c[2] + 0.55)];
+    };
 
     // Hull parts
     for (const part of tank.hullParts) {
@@ -1260,7 +2921,7 @@
       ]);
       mat4Multiply(mvp, projM, viewM);
       mat4Multiply(mvp, mvp, modelM);
-      drawCube(mvp, part[6]);
+      drawCube(mvp, boxColor(part[6]));
     }
 
     // Turret parts
@@ -1275,8 +2936,64 @@
       ]);
       mat4Multiply(mvp, projM, viewM);
       mat4Multiply(mvp, mvp, modelM);
-      drawCube(mvp, part[6]);
+      drawCube(mvp, boxColor(part[6]));
     }
+  }
+
+  function drawSolidBox(cx, cy, cz, sx, sy, sz, color) {
+    mat4Compose(modelM, [
+      ['T', cx, cy, cz],
+      ['S', sx, sy, sz]
+    ]);
+    mat4Multiply(mvp, projM, viewM);
+    mat4Multiply(mvp, mvp, modelM);
+    drawCube(mvp, curFog > 0.002 ? fogColor(color, curFog) : color);
+  }
+
+  function drawBuilding(b) {
+    const hw = b.sx / 2;
+    const hd = b.sz / 2;
+    // 墙体
+    drawSolidBox(b.x, b.h / 2, b.z, b.sx, b.h, b.sz, b.wall);
+    // 房顶（与墙体碰撞体积一致，不再外伸造成穿模）
+    drawSolidBox(b.x, b.h + 0.35, b.z, b.sx, 0.6, b.sz, b.roof);
+    // 墙基线 / 勒脚，让建筑更有层次
+    drawSolidBox(b.x, 0.12, b.z, b.sx + 0.1, 0.24, b.sz + 0.1, [0.42, 0.35, 0.28]);
+
+    const winColor = [0.65, 0.30, 0.14];    // 屋内余烬微光
+    const frameColor = [0.48, 0.47, 0.45];  // 烧焦的窗框轮廓（保持可见）
+    // 前后墙面窗户
+    for (const dirZ of [-1, 1]) {
+      const wz = b.z + dirZ * hd + dirZ * 0.05;
+      for (const wx of [-hw * 0.45, hw * 0.45]) {
+        drawSolidBox(b.x + wx, b.h * 0.5, wz, 0.55, 0.55, 0.08, frameColor);
+        drawSolidBox(b.x + wx, b.h * 0.5, b.z + dirZ * hd + dirZ * 0.11, 0.32, 0.36, 0.02, winColor);
+      }
+    }
+    // 左右墙面窗户只保留窗框（减少 Draw Call 并保持远景性能）
+    for (const dirX of [-1, 1]) {
+      const wx = b.x + dirX * hw + dirX * 0.05;
+      drawSolidBox(wx, b.h * 0.5, b.z, 0.08, 0.5, b.sz * 0.6, frameColor);
+      drawSolidBox(b.x + dirX * hw + dirX * 0.11, b.h * 0.5, b.z, 0.02, 0.35, b.sz * 0.4, winColor);
+    }
+    // 正门（朝向 +Z）
+    drawSolidBox(b.x, 0.75, b.z + hd + 0.06, 0.85, 0.95, 0.06, [0.09, 0.07, 0.06]);
+    drawSolidBox(b.x - 0.3, 1.2, b.z + hd + 0.13, 0.1, 0.08, 0.02, [0.6, 0.5, 0.32]);
+    // 烟囱
+    const chimneyX = b.x + hw * 0.25;
+    const chimneyZ = b.z - hd * 0.2;
+    drawSolidBox(chimneyX, b.h + 0.9, chimneyZ, 0.4, 0.45, 0.4, [0.16, 0.14, 0.12]);
+    drawSolidBox(chimneyX, b.h + 1.15, chimneyZ, 0.5, 0.08, 0.5, [0.05, 0.05, 0.05]);
+  }
+
+  function drawBuildings() {
+    for (const b of buildings) {
+      const ddx = b.x - camX, ddz = b.z - camZ;
+      const d = Math.sqrt(ddx * ddx + ddz * ddz);
+      curFog = clamp((d - 26) / 95, 0, 0.7);
+      drawBuilding(b);
+    }
+    curFog = 0;
   }
 
   function drawGround() {
@@ -1292,7 +3009,11 @@
         const cx = gx + cell * 0.5;
         const cz = gz + cell * 0.5;
         const checker = ((Math.round(cx / cell) + Math.round(cz / cell)) & 1) === 0;
-        const color = checker ? [0.42, 0.54, 0.25] : [0.36, 0.48, 0.22];
+        const c = checker ? [0.42, 0.55, 0.26] : [0.36, 0.48, 0.22];
+        const ddx = cx - camX, ddz = cz - camZ;
+        const dist = Math.sqrt(ddx * ddx + ddz * ddz);
+        const fog = clamp((dist - 28) / 105, 0, 0.72);
+        const color = fog > 0.002 ? fogColor(c, fog) : c;
         mat4Compose(modelM, [
           ['T', cx, 0, cz],
           ['S', cell, 1, cell]
@@ -1304,49 +3025,281 @@
     }
   }
 
-  function drawParticles() {
-    for (const p of particles) {
-      const lifeT = clamp(p.life / p.maxLife, 0, 1);
-      const col = p.smoke
-        ? [0.55 + lifeT * 0.15, 0.55 + lifeT * 0.15, 0.5]
-        : [p.color[0], p.color[1] * (0.5 + lifeT * 0.5), p.color[2]];
-      const sz = p.size * (p.smoke ? (1 + (1 - lifeT) * 3) : (0.5 + lifeT * 0.8));
+  // 被击毁坦克的烧焦残骸
+  function drawWrecks() {
+    for (const w of wrecks) {
+      const d = TANK_DEFS[w.type] || TANK_DEFS.t34;
+      const R = d.radius;
+      const black = [0.10, 0.10, 0.09];
+      const dark = [0.17, 0.16, 0.13];
+      // 车体残骸
       mat4Compose(modelM, [
-        ['T', p.x, p.y, p.z],
-        ['S', sz, sz, sz]
+        ['T', w.x, 0, w.z], ['Y', w.yaw],
+        ['T', 0, 0.42, 0], ['S', R * 2.0, 0.85, R * 2.5]
       ]);
       mat4Multiply(mvp, projM, viewM);
       mat4Multiply(mvp, mvp, modelM);
-      drawCube(mvp, col);
+      drawCube(mvp, black);
+      // 炮塔/炮座残骸
+      mat4Compose(modelM, [
+        ['T', w.x, 0, w.z], ['Y', w.yaw],
+        ['T', 0, 1.15, 0.15], ['S', R * 1.25, 0.55, R * 1.5]
+      ]);
+      mat4Multiply(mvp, projM, viewM);
+      mat4Multiply(mvp, mvp, modelM);
+      drawCube(mvp, dark);
+      // 炮管残段（稍歪）
+      mat4Compose(modelM, [
+        ['T', w.x, 0, w.z], ['Y', w.yaw],
+        ['T', 0, 1.15, 2.0], ['X', -0.12],
+        ['S', 0.16, 0.16, 2.1]
+      ]);
+      mat4Multiply(mvp, projM, viewM);
+      mat4Multiply(mvp, mvp, modelM);
+      drawCube(mvp, [0.12, 0.12, 0.11]);
     }
   }
 
-  function drawBullets() {
-    for (const b of bullets) {
-      mat4Compose(modelM, [
-        ['T', b.x, b.y, b.z],
-        ['S', 0.18, 0.18, 0.45]
-      ]);
+  // 补给箱（绿色十字）
+  function drawCrates() {
+    const tNow = performance.now() * 0.001;
+    for (const c of crates) {
+      const bob = Math.sin(tNow * 2.6 + c.x * 0.7) * 0.07;
+      const y = 0.42 + bob;
+      // 箱体
+      drawSolidBox(c.x, y, c.z, 0.95, 0.8, 0.95, [0.64, 0.47, 0.24]);
+      // 加固条
+      drawSolidBox(c.x, y + 0.05, c.z, 1.0, 0.1, 1.0, [0.45, 0.32, 0.16]);
+      drawSolidBox(c.x + 0.34, y, c.z, 0.08, 0.72, 0.8, [0.42, 0.30, 0.15]);
+      drawSolidBox(c.x - 0.34, y, c.z, 0.08, 0.72, 0.8, [0.42, 0.30, 0.15]);
+      // 顶部红十字
+      drawSolidBox(c.x, y + 0.42, c.z, 0.3, 0.08, 0.62, [0.8, 0.22, 0.2]);
+      drawSolidBox(c.x, y + 0.42, c.z, 0.62, 0.08, 0.3, [0.8, 0.22, 0.2]);
+    }
+  }
+
+  function drawParticles() {
+    gl.depthMask(false); // 半透明粒子不写深度，避免互相遮挡出“切面”
+    let addMode = -1; // 首次必然设置混合状态
+    function setBlend(add) {
+      if (add === addMode) return;
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, add ? gl.ONE : gl.ONE_MINUS_SRC_ALPHA);
+      addMode = add;
+    }
+    for (const p of particles) {
+      const lifeT = clamp(p.life / p.maxLife, 0, 1);
+      const kind = p.kind || 'smoke';
+      let col, alpha, size, cube = true, add = false;
+      switch (kind) {
+        case 'flash':
+          add = true; cube = true;
+          col = [1, 0.95, 0.6];
+          alpha = lifeT;
+          size = p.size;
+          break;
+        case 'ring':
+          add = true; cube = false;
+          col = [1, 0.8, 0.4];
+          alpha = lifeT * 0.6;
+          size = p.size * (1 + (1 - lifeT) * 7);
+          break;
+        case 'fire':
+          add = true; cube = true;
+          col = p.color || [1, 0.6, 0.2];
+          alpha = lifeT;
+          size = p.size * (0.45 + 0.55 * lifeT);
+          break;
+        case 'spark':
+          add = true; cube = true;
+          col = [1, 0.9, 0.5];
+          alpha = lifeT;
+          size = p.size;
+          break;
+        default: // smoke
+          add = false; cube = true;
+          col = p.color || [0.5, 0.47, 0.42];
+          alpha = lifeT * 0.4;
+          size = p.size * (1 + (1 - lifeT) * 3.4);
+          break;
+      }
+      setBlend(add);
+      if (cube) {
+        mat4Compose(modelM, [['T', p.x, p.y, p.z], ['S', size, size, size]]);
+      } else {
+        mat4Compose(modelM, [['T', p.x, p.y, p.z], ['S', size, 1, size]]);
+      }
       mat4Multiply(mvp, projM, viewM);
       mat4Multiply(mvp, mvp, modelM);
-      drawCube(mvp, b.owner === 'player' ? [1, 0.9, 0.2] : [1, 0.35, 0.2]);
+      if (cube) drawCube(mvp, col, alpha);
+      else drawPlane(mvp, col, alpha);
     }
+    gl.depthMask(true);
+  }
+
+  // 炮弹：曳光 + 弹芯（沿速度方向拉长）
+  function drawBullets() {
+    gl.enable(gl.BLEND);
+    gl.depthMask(false);
+    for (const b of bullets) {
+      const ang = Math.atan2(b.vx, b.vz);
+      const len = Math.max(0.6, b.vlen * 0.016);
+      const isPlayer = b.owner === 'player';
+      // 曳光
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+      mat4Compose(modelM, [['T', b.x, b.y, b.z], ['Y', ang], ['S', 0.26, 0.26, len * 1.6]]);
+      mat4Multiply(mvp, projM, viewM);
+      mat4Multiply(mvp, mvp, modelM);
+      drawCube(mvp, isPlayer ? [1, 0.85, 0.35] : [1, 0.42, 0.2], 0.35);
+      // 弹芯
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      mat4Compose(modelM, [['T', b.x, b.y, b.z], ['Y', ang], ['S', 0.14, 0.14, len]]);
+      mat4Multiply(mvp, projM, viewM);
+      mat4Multiply(mvp, mvp, modelM);
+      drawCube(mvp, isPlayer ? [1, 0.96, 0.55] : [1, 0.55, 0.3], 1);
+    }
+    gl.depthMask(true);
   }
 
   function render() {
     gl.viewport(0, 0, PIXEL_W, PIXEL_H);
+    gl.disable(gl.BLEND);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     const eye = getCameraEye();
     const look = getCameraLook();
+    camX = eye[0]; camY = eye[1]; camZ = eye[2];
     mat4Perspective(projM, FOV, aspect, NEAR, FAR);
     mat4LookAt(viewM, eye, look, [0, 1, 0]);
 
     drawGround();
+    drawBuildings();
     for (const e of enemies) drawTank(e);
     drawTank(player);
+    drawWrecks();
+    drawCrates();
     drawParticles();
     drawBullets();
+    gl.disable(gl.BLEND);
+  }
+
+  // ============ 程序化音效（WebAudio，零外部资源） ============
+  let audioCtx = null;
+  let sfxMaster = null;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        audioCtx = new AC();
+        sfxMaster = audioCtx.createGain();
+        sfxMaster.gain.value = 0.55;
+        sfxMaster.connect(audioCtx.destination);
+      } catch (e) { audioCtx = null; }
+    }
+    if (audioCtx && audioCtx.state === 'suspended' && audioCtx.resume) {
+      try { audioCtx.resume(); } catch (e) {}
+    }
+    return audioCtx;
+  }
+  function sfxOut() {
+    if (muted || !audioCtx || !sfxMaster) return null;
+    if (audioCtx.state !== 'running') return null;
+    return sfxMaster;
+  }
+  function noiseBuffer(c) {
+    if (!c._nb) {
+      const len = Math.floor(c.sampleRate * 1.0);
+      const buf = c.createBuffer(1, len, c.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      c._nb = buf;
+    }
+    return c._nb;
+  }
+  function playNoise(dur, opts) {
+    const dst = sfxOut();
+    if (!dst || !audioCtx) return;
+    const c = audioCtx;
+    const t = c.currentTime;
+    try {
+      const src = c.createBufferSource();
+      src.buffer = noiseBuffer(c);
+      const f = c.createBiquadFilter();
+      f.type = opts.filter || 'lowpass';
+      f.frequency.setValueAtTime(opts.f0 || 1200, t);
+      f.frequency.exponentialRampToValueAtTime(Math.max(40, opts.f1 || 200), t + dur);
+      const g = c.createGain();
+      const v = opts.gain === undefined ? 0.3 : opts.gain;
+      g.gain.setValueAtTime(Math.max(0.0001, v), t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(f); f.connect(g); g.connect(dst);
+      src.start(t); src.stop(t + dur + 0.03);
+    } catch (e) {}
+  }
+  function playTone(f0, f1, dur, opts) {
+    const dst = sfxOut();
+    if (!dst || !audioCtx) return;
+    const c = audioCtx;
+    const t = c.currentTime;
+    try {
+      const o = c.createOscillator();
+      o.type = opts.type || 'triangle';
+      o.frequency.setValueAtTime(Math.max(20, f0), t);
+      if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+      const g = c.createGain();
+      const v = opts.gain === undefined ? 0.2 : opts.gain;
+      g.gain.setValueAtTime(Math.max(0.0001, v), t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(dst);
+      o.start(t); o.stop(t + dur + 0.03);
+    } catch (e) {}
+  }
+  function sfxShot(owner) {
+    const dst = sfxOut(); if (!dst) return;
+    const isPlayer = owner === 'player';
+    playNoise(0.15, { filter: 'bandpass', f0: 1700, f1: 260, gain: isPlayer ? 0.4 : 0.28 });
+    playTone(120, 40, 0.2, { type: 'square', gain: isPlayer ? 0.2 : 0.14 });
+  }
+  function sfxExplode(big) {
+    playNoise(big ? 0.75 : 0.32, { filter: 'lowpass', f0: big ? 1300 : 800, f1: 55, gain: big ? 0.6 : 0.3 });
+    playTone(big ? 100 : 80, 26, big ? 0.6 : 0.28, { type: 'sine', gain: big ? 0.42 : 0.2 });
+  }
+  function sfxClang() {
+    playTone(2300, 800, 0.09, { type: 'square', gain: 0.09 });
+    playTone(3400, 1300, 0.06, { type: 'square', gain: 0.06 });
+  }
+  function sfxBuilImpact() {
+    playNoise(0.16, { filter: 'lowpass', f0: 650, f1: 130, gain: 0.2 });
+  }
+  function sfxTankDestroy() {
+    playNoise(1.0, { filter: 'lowpass', f0: 1500, f1: 45, gain: 0.6 });
+    playTone(150, 26, 0.8, { type: 'sawtooth', gain: 0.32 });
+  }
+  function sfxRepair() {
+    playTone(620, 900, 0.14, { type: 'sine', gain: 0.18 });
+    setTimeout(() => playTone(920, 1240, 0.16, { type: 'sine', gain: 0.18 }), 130);
+  }
+  function sfxCrate() {
+    playTone(520, 1040, 0.16, { type: 'triangle', gain: 0.2 });
+    setTimeout(() => playTone(780, 1560, 0.2, { type: 'triangle', gain: 0.18 }), 120);
+  }
+  function sfxWave() {
+    playTone(392, 392, 0.12, { type: 'triangle', gain: 0.18 });
+    setTimeout(() => playTone(523, 523, 0.12, { type: 'triangle', gain: 0.18 }), 130);
+    setTimeout(() => playTone(659, 659, 0.16, { type: 'triangle', gain: 0.2 }), 260);
+  }
+  function sfxWin() {
+    [523, 659, 784, 1047].forEach((f, i) =>
+      setTimeout(() => playTone(f, f, 0.24, { type: 'triangle', gain: 0.22 }), i * 150));
+  }
+  function sfxLose() {
+    playTone(300, 110, 0.7, { type: 'sawtooth', gain: 0.26 });
+    playTone(220, 70, 0.9, { type: 'triangle', gain: 0.22 });
+  }
+  function sfxClick() {
+    playTone(700, 950, 0.05, { type: 'sine', gain: 0.1 });
   }
 
   // ============ Main loop ============
@@ -1355,11 +3308,31 @@
     const dt = Math.min(0.05, (now - lastTime) / 1000 || 0.016);
     lastTime = now;
 
-    updatePlayer(dt);
-    for (const e of enemies) updateAI(e, dt);
-    updateBullets(dt);
+    if (phase === 'battle') {
+      updatePlayer(dt);
+      for (const e of enemies) updateAI(e, dt);
+      updateBullets(dt);
+    } else if (phase === 'break') {
+      breakTimer -= dt;
+      updatePlayer(dt);
+      if (breakTimer <= 0) {
+        spawnWave(wave + 1);
+      } else {
+        const sec = Math.ceil(breakTimer);
+        if (sec !== lastBreakSec) {
+          lastBreakSec = sec;
+          waveBannerSEl.textContent = '第 ' + (wave + 1) + ' 波敌军将在 ' + sec + ' 秒后抵达…';
+        }
+      }
+    } else {
+      return; // 'won' | 'over'：停在本帧
+    }
+
     updateParticles(dt);
+    updateWrecks(dt);
+    updateCrates(dt);
     render();
+    updateAimUI();
     requestAnimationFrame(loop);
   }
 
